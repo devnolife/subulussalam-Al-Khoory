@@ -2,6 +2,8 @@
 
 Layar TV `/display` dan panel pengurus `/admin` untuk Masjid Subulussalam Al-Khoory. Tampilan diatur melalui HP dan diperbarui melalui SSE.
 
+Demo publik berdata contoh: <https://subulussalam-al-khoory.vercel.app>. Demo berjalan dengan `DEMO_MODE=1` tanpa database, sehingga panel pengurus tidak tersedia di sana.
+
 ## Pengembangan lokal
 
 Gunakan Node.js 24 dan PostgreSQL. Salin `.env.example` menjadi `.env`, buat database PostgreSQL, lalu isi `DATABASE_URL` dan `ADMIN_INITIAL_PIN` dengan nilai sendiri. Kode awal hanya digunakan ketika database pertama kali diinisialisasi; mengganti variabel sesudah itu tidak mengubah kode yang sudah tersimpan.
