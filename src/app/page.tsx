@@ -1,69 +1,64 @@
-import Image from "next/image";
+import Link from "next/link";
+import { connection } from "next/server";
+import { ArrowRight, FlaskConical, MonitorPlay, Smartphone, type LucideIcon } from "lucide-react";
+import { SunEmblem } from "@/components/display/SunEmblem";
+import { IconTile } from "@/components/display/ui";
 
-export default function Home() {
+type HomeLink = { href: string; title: string; desc: string; icon: LucideIcon; brand: boolean };
+
+const LINKS: HomeLink[] = [
+  { href: "/display", title: "Layar TV", desc: "Tampilan informasi untuk layar di masjid", icon: MonitorPlay, brand: true },
+  { href: "/admin", title: "Panel pengurus", desc: "Kelola jadwal, kajian, dan pengumuman dari HP", icon: Smartphone, brand: false },
+];
+
+// Deployment demo tidak punya database, jadi hanya mengarah ke halaman berdata contoh.
+const DEMO_LINKS: HomeLink[] = [
+  { href: "/demo", title: "Simulasi layar", desc: "Coba semua panel dan kondisi layar dengan data contoh", icon: FlaskConical, brand: true },
+  { href: "/display?demo=1&module=kabah", title: "Layar TV penuh", desc: "Tampilan 1920×1080 seperti di TV masjid", icon: MonitorPlay, brand: false },
+];
+
+export default async function Home() {
+  await connection();
+  const demo = process.env.DEMO_MODE === "1";
+  const links = demo ? DEMO_LINKS : LINKS;
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="scene flex min-h-dvh items-center justify-center px-6 py-16">
+      <div className="w-full max-w-2xl">
+        <span className="card-brand grid size-20 place-items-center rounded-[26px] text-white">
+          <SunEmblem className="size-12" />
+        </span>
+        <p className="mt-9 text-sm font-bold tracking-[0.14em] text-gold-400 uppercase">Universitas Muhammadiyah Makassar</p>
+        <h1 className="mt-3 text-4xl leading-[1.05] font-extrabold tracking-[-0.03em] text-balance sm:text-6xl">
+          Masjid Subulussalam Al-Khoory
+        </h1>
+        <p className="mt-4 max-w-xl text-lg text-sky-200/75">Layar informasi masjid yang dapat dikelola langsung dari HP pengurus.</p>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {links.map(({ href, title, desc, icon, brand }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`group flex flex-col gap-6 rounded-[28px] p-6 transition-[scale] duration-150 active:scale-[0.96] ${brand ? "card-brand" : "card"}`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              <span className="flex items-center justify-between">
+                <IconTile icon={icon} tone={brand ? "gold" : "brand"} />
+                <ArrowRight
+                  className="size-6 text-white/50 transition-transform duration-150 group-hover:translate-x-1"
+                  aria-hidden="true"
+                />
+              </span>
+              <span>
+                <span className="block text-xl font-extrabold">{title}</span>
+                <span className="mt-1 block text-sm text-sky-100/75">{desc}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+        {demo && (
+          <p className="mt-6 text-sm text-sky-200/60">
+            Versi demo ini memakai data contoh. Panel pengurus memerlukan database sehingga tidak tersedia di sini.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        )}
+      </div>
+    </main>
   );
 }

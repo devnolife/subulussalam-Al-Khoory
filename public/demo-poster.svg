@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#0a1a4f"/>
+  <circle cx="1300" cy="170" r="310" fill="#1d1ce5" opacity=".45"/>
+  <path d="M0 690 Q400 530 800 720 T1600 660 V900 H0Z" fill="#183c70"/>
+  <path d="M0 770 Q450 650 920 790 T1600 730 V900 H0Z" fill="#0a2445"/>
+  <text x="115" y="215" fill="#ebcf83" font-size="38" font-family="sans-serif" letter-spacing="8">POSTER CONTOH · SIMULASI</text>
+  <text x="110" y="360" fill="white" font-size="95" font-weight="bold" font-family="sans-serif">Kajian Kampus</text>
+  <text x="115" y="445" fill="#b9ddff" font-size="45" font-family="sans-serif">Bersama memakmurkan masjid</text>
+  <text x="115" y="565" fill="#ebcf83" font-size="38" font-family="sans-serif">Hari ini · Ba'da Maghrib</text>
+  <text x="115" y="790" fill="white" opacity=".7" font-size="30" font-family="sans-serif">Nama dan jadwal hanya data contoh</text>
+</svg>
