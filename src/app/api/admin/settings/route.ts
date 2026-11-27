@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSettings, setSetting } from "@/lib/settings";
-import { handleError, requireAdmin } from "@/lib/api";
+import { authorize, handleError } from "@/lib/api";
+import { audit } from "@/lib/auth";
 import { publish } from "@/lib/realtime";
 import { clearPrayerCache } from "@/lib/prayer/service";
 import { FARDH_KEYS, PRAYER_KEYS } from "@/lib/types";
@@ -63,8 +64,8 @@ const schema = z
   .partial();
 
 export async function GET() {
-  const denied = await requireAdmin();
-  if (denied) return denied;
+  const user = await authorize(null);
+  if (user instanceof NextResponse) return user;
   try {
     return NextResponse.json(await getSettings());
   } catch (e) {
@@ -72,17 +73,31 @@ export async function GET() {
   }
 }
 
+const SECTION_LABELS: Record<string, string> = {
+  mosque: "identitas masjid",
+  location: "lokasi",
+  prayer: "jadwal sholat",
+  hijriOffset: "koreksi Hijriah",
+  hijriMonths: "awal bulan Hijriah",
+  kabah: "siaran Ka'bah",
+  qris: "infak & QRIS",
+};
+
 export async function PUT(request: Request) {
-  const denied = await requireAdmin();
-  if (denied) return denied;
+  const user = await authorize("settings");
+  if (user instanceof NextResponse) return user;
   try {
     const data = schema.parse(await request.json());
     const before = await getSettings();
+    const changed: string[] = [];
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) await setSetting(key as keyof typeof data, value as never);
+      if (value === undefined) continue;
+      await setSetting(key as keyof typeof data, value as never);
+      if (JSON.stringify(value) !== JSON.stringify(before[key as keyof typeof before])) changed.push(SECTION_LABELS[key] ?? key);
     }
     if (data.location && data.location.kemenagCityId !== before.location.kemenagCityId) await clearPrayerCache();
     publish({ type: "update", topics: ["settings"] });
+    if (changed.length) await audit(user, "settings", "pengaturan", `Mengubah ${changed.join(", ")}`);
     return NextResponse.json(await getSettings());
   } catch (e) {
     return handleError(e);

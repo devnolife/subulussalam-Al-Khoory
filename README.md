@@ -6,7 +6,7 @@ Demo publik berdata contoh: <https://subulussalam-al-khoory.vercel.app>. Demo be
 
 ## Pengembangan lokal
 
-Gunakan Node.js 24 dan PostgreSQL. Salin `.env.example` menjadi `.env`, buat database PostgreSQL, lalu isi `DATABASE_URL` dan `ADMIN_INITIAL_PIN` dengan nilai sendiri. Kode awal hanya digunakan ketika database pertama kali diinisialisasi; mengganti variabel sesudah itu tidak mengubah kode yang sudah tersimpan.
+Gunakan Node.js 24 dan PostgreSQL. Salin `.env.example` menjadi `.env`, buat database PostgreSQL, lalu isi `DATABASE_URL` dan `ADMIN_INITIAL_PIN` dengan nilai sendiri. `ADMIN_INITIAL_PIN` menjadi password awal akun `admin` dan hanya digunakan ketika database pertama kali diinisialisasi; mengganti variabel sesudah itu tidak mengubah password yang sudah tersimpan.
 
 ```sh
 npm ci
@@ -17,7 +17,7 @@ Buka `http://localhost:3000/display` untuk TV dan `http://localhost:3000/admin` 
 
 ## Simulasi tanpa database
 
-Untuk pengembangan atau preview Vercel, atur `DEMO_MODE=1` di `.env.local` atau di environment variables project Vercel, lalu jalankan/deploy aplikasi dan buka `/demo`. Tidak perlu mengatur `DATABASE_URL` atau kode admin untuk simulasi ini.
+Untuk pengembangan atau preview Vercel, atur `DEMO_MODE=1` di `.env.local` atau di environment variables project Vercel, lalu jalankan/deploy aplikasi dan buka `/demo`. Tidak perlu mengatur `DATABASE_URL` atau password admin untuk simulasi ini.
 
 Pilih panel dan kondisi layar pada halaman tersebut untuk melihat contoh kegiatan hari ini dan penceramah, petugas Jumat, poster, kas, ayat, donasi, hari besar Islam, pengumuman, azan, doa setelah azan, iqamah, sholat, serta pengumuman darurat. API contoh tersedia di `/api/display/state?demo=1`, dan menerima pilihan `module` serta `phase` seperti yang digunakan halaman simulasi.
 
@@ -27,13 +27,35 @@ Semua data hanya contoh; QRIS tidak bisa dipindai, cuaca bukan data aktual, dan 
 
 Siapkan domain yang mengarah ke VPS, Docker Compose, Nginx, Certbot dan akses ke port 80/443. Jalankan **satu replika aplikasi**: realtime dan status TV saat ini disimpan dalam memori proses dan tidak mendukung beberapa replika.
 
-1. Salin `.env.example` ke `.env`. Isi `POSTGRES_PASSWORD` dengan password acak alfanumerik panjang dan `ADMIN_INITIAL_PIN` dengan kode unik yang kuat. Jangan membagikan atau mengunggah `.env`. `DATABASE_URL` lokal tidak dipakai oleh Compose.
+1. Salin `.env.example` ke `.env`. Isi `POSTGRES_PASSWORD` dengan password acak alfanumerik panjang dan `ADMIN_INITIAL_PIN` dengan password awal akun `admin` yang kuat. Jangan membagikan atau mengunggah `.env`. `DATABASE_URL` lokal tidak dipakai oleh Compose.
 2. Jalankan `docker compose up -d --build`. PostgreSQL hanya dapat diakses dalam jaringan Docker; aplikasi terikat ke `127.0.0.1:3000`.
 3. Salin `deploy/nginx.conf` ke konfigurasi situs Nginx pada host, ganti `masjid.example.com` dengan domain sebenarnya, aktifkan situs, lalu jalankan `sudo nginx -t` dan muat ulang Nginx.
 4. Pasang sertifikat menggunakan `sudo certbot --nginx -d DOMAIN`, lalu pastikan pembaruan otomatis Certbot aktif. Jangan gunakan panel admin melalui HTTP publik.
 5. Buka `https://DOMAIN/admin` di HP dan `https://DOMAIN/display` di browser TV landscape. Gunakan mode layar penuh atau kiosk; perangkat TV dan VPS membutuhkan internet untuk pembaruan dan YouTube. Agar suara Live Ka'bah langsung menyala tanpa perlu mengetuk layar, jalankan Chrome dengan opsi autoplay, misalnya `chrome --kiosk --autoplay-policy=no-user-gesture-required https://DOMAIN/display`.
 
 Perubahan pada `POSTGRES_PASSWORD` setelah volume database dibuat tidak otomatis mengganti password di PostgreSQL. Jangan hapus volume database atau upload saat memperbarui aplikasi.
+
+## Akun pengurus dan peran
+
+Panel `/admin` memakai nama pengguna dan password untuk tiap pengurus. Saat aplikasi pertama kali berjalan dibuat akun `admin` (nama "Administrator"):
+
+- Pada database baru, password-nya adalah nilai `ADMIN_INITIAL_PIN`.
+- Pada instalasi lama yang sebelumnya memakai satu kode unik, password akun `admin` adalah **kode unik lama** tersebut. Semua perangkat perlu login ulang sekali setelah pembaruan ini.
+
+Setelah login pertama, ganti password di Pengaturan › **Ganti password saya** (minimal 8 karakter). Mengganti password mengeluarkan akun itu dari perangkat lain.
+
+Admin menambah pengurus lain di Pengaturan › **Pengguna**, lalu memilih perannya:
+
+| Peran | Akses |
+| --- | --- |
+| Admin | Semua menu, pengaturan masjid, pengguna, dan riwayat aktivitas |
+| Bendahara | Kas dan infak |
+| Konten | Konten layar (pengumuman, kajian, Jumat, ayat, slide), urutan tampilan, upload gambar, dan remote TV |
+| Operator TV | Remote TV dan urutan tampilan |
+
+Di halaman Pengguna, admin juga bisa mengubah peran, mereset password, dan menonaktifkan akun; akun yang dinonaktifkan atau direset langsung keluar dari semua perangkat. Akun tidak dihapus agar riwayat tetap utuh. Admin tidak bisa menonaktifkan akunnya sendiri, dan admin aktif terakhir tidak bisa diturunkan perannya atau dinonaktifkan. Setelah 5 kali salah password untuk satu nama pengguna (atau 20 kali dari satu alamat), login dikunci 5 menit.
+
+Pengaturan › **Riwayat aktivitas** (khusus admin) mencatat siapa yang login, keluar, menambah, mengubah, atau menghapus konten dan kas, mengubah pengaturan, mengelola pengguna, serta mengirim perintah remote. Riwayat disimpan satu tahun.
 
 ## Cadangan
 

@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { isAuthenticated } from "./auth";
+import { currentUser, type SessionUser } from "./auth";
+import { can, type Permission } from "./permissions";
 
 export function jsonError(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 
-/** Mengembalikan response 401 jika belum login, atau null jika boleh lanjut. */
-export async function requireAdmin(): Promise<NextResponse | null> {
-  return (await isAuthenticated()) ? null : jsonError("Silakan login terlebih dahulu", 401);
+/**
+ * Pengguna yang login dan punya izin `permission` (null = cukup login),
+ * atau response 401/403 yang harus langsung dikembalikan.
+ */
+export async function authorize(permission: Permission | null): Promise<SessionUser | NextResponse> {
+  const user = await currentUser();
+  if (!user) return jsonError("Silakan login terlebih dahulu", 401);
+  if (permission && !can(user.role, permission)) return jsonError("Akun Anda tidak punya akses untuk tindakan ini", 403);
+  return user;
 }
 
 export function handleError(e: unknown) {

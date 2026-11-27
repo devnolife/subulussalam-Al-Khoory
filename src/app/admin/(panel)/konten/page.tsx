@@ -2,6 +2,8 @@ import Link from "next/link";
 import { BookOpen, CalendarDays, ChevronRight, Images, Megaphone, ScrollText, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/admin/ui";
 import { IconTile } from "@/components/display/ui";
+import { currentUser } from "@/lib/auth";
+import { can, routePermission } from "@/lib/permissions";
 
 const ITEMS = [
   { href: "/admin/pengumuman", label: "Pengumuman", desc: "Teks berjalan dan informasi", icon: Megaphone },
@@ -12,12 +14,17 @@ const ITEMS = [
   { href: "/admin/slide", label: "Poster", desc: "Gambar kegiatan", icon: Images },
 ];
 
-export default function KontenPage() {
+export default async function KontenPage() {
+  const user = await currentUser();
+  const items = ITEMS.filter(({ href }) => {
+    const permission = routePermission(href);
+    return !!user && (!permission || can(user.role, permission));
+  });
   return (
     <div>
       <PageHeader title="Konten" description="Kelola informasi yang tampil di layar masjid." />
       <ul className="grid grid-cols-2 gap-3">
-        {ITEMS.map(({ href, label, desc, icon }) => (
+        {items.map(({ href, label, desc, icon }) => (
           <li key={href}>
             <Link
               href={href}

@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
-import { handleError, jsonError, requireAdmin } from "@/lib/api";
+import { authorize, handleError, jsonError } from "@/lib/api";
 import { uploadDir } from "@/lib/uploads";
 
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -13,8 +13,8 @@ const MAX_BYTES = 10 * 1024 * 1024;
  * QRIS/logo disimpan PNG lossless agar tetap tajam dan bisa dipindai.
  */
 export async function POST(request: Request) {
-  const denied = await requireAdmin();
-  if (denied) return denied;
+  const user = await authorize("upload");
+  if (user instanceof NextResponse) return user;
   try {
     const form = await request.formData();
     const file = form.get("file");

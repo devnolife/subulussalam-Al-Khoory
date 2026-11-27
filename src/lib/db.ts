@@ -27,6 +27,15 @@ CREATE TABLE IF NOT EXISTS slides (
   id SERIAL PRIMARY KEY, image TEXT NOT NULL, caption TEXT NOT NULL DEFAULT '', active BOOLEAN NOT NULL DEFAULT TRUE,
   sort INT NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS prayer_cache (date DATE PRIMARY KEY, times JSONB NOT NULL, fetched_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY, username TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '', password_hash TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('admin','bendahara','konten','operator')), active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(), last_login_at TIMESTAMPTZ);
+ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id) ON DELETE CASCADE;
+CREATE TABLE IF NOT EXISTS audit_log (
+  id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(), user_id INT REFERENCES users(id) ON DELETE SET NULL,
+  username TEXT NOT NULL DEFAULT '', action TEXT NOT NULL, target TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS audit_log_at_idx ON audit_log (at DESC);
 `;
 
 const SEED_PLAYLIST: [string, number][] = [
@@ -96,16 +105,27 @@ async function init(): Promise<void> {
       await p.query("INSERT INTO verses (arabic, translation, source) VALUES ($1,$2,$3)", [arabic, translation, source]);
     }
   }
-  const existingPin = await p.query("SELECT 1 FROM settings WHERE key = 'pinHash'");
-  if (!existingPin.rowCount) {
-    const pin = process.env.ADMIN_INITIAL_PIN;
-    if (!pin || pin.trim().length < 6 || pin.length > 64) {
-      throw new Error("ADMIN_INITIAL_PIN wajib diatur (6–64 karakter) saat inisialisasi database");
+  const existingUser = await p.query("SELECT 1 FROM users LIMIT 1");
+  if (!existingUser.rowCount) {
+    // Instalasi lama memakai satu kode unik: hash-nya dipakai ulang sebagai password akun "admin".
+    const legacy = await p.query<{ value: unknown }>("SELECT value FROM settings WHERE key = 'pinHash'");
+    const legacyHash = legacy.rows[0]?.value;
+    let hash = typeof legacyHash === "string" ? legacyHash : undefined;
+    if (!hash) {
+      const pin = process.env.ADMIN_INITIAL_PIN;
+      if (!pin || pin.trim().length < 6 || pin.length > 64) {
+        throw new Error("ADMIN_INITIAL_PIN wajib diatur (6–64 karakter) saat inisialisasi database");
+      }
+      hash = await bcrypt.hash(pin.trim(), 10);
     }
-    await p.query("INSERT INTO settings (key, value) VALUES ('pinHash', $1) ON CONFLICT (key) DO NOTHING", [
-      JSON.stringify(await bcrypt.hash(pin.trim(), 10)),
-    ]);
+    await p.query(
+      "INSERT INTO users (username, name, password_hash, role) VALUES ('admin', 'Administrator', $1, 'admin') ON CONFLICT (username) DO NOTHING",
+      [hash],
+    );
   }
+  // Sesi dari sistem kode unik lama tidak terikat pengguna: semua perangkat login ulang sekali.
+  await p.query("DELETE FROM sessions WHERE user_id IS NULL OR expires_at < now()");
+  await p.query("DELETE FROM audit_log WHERE at < now() - interval '1 year'");
 }
 
 /** Skema dibuat otomatis (idempotent) pada akses pertama. */

@@ -4,10 +4,13 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/components/admin/api";
+import { AccountSection, AdminLinks } from "@/components/admin/AccountSection";
+import { useAdminUser } from "@/components/admin/AdminUser";
 import { Button, Field, ImageField, PageHeader, Select, TextInput, Toggle } from "@/components/admin/ui";
 import { FARDH_KEYS, PRAYER_KEYS, PRAYER_LABELS, type HijriMonthStart, type Settings } from "@/lib/types";
 import { youtubeEmbedUrl } from "@/lib/youtube";
 import { HIJRI_MONTHS, formatHijri, hijriCalendar, hijriParts } from "@/lib/hijri";
+import { can } from "@/lib/permissions";
 
 function Section({ title, desc, children, defaultOpen }: { title: string; desc: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
@@ -54,9 +57,24 @@ function NumberGrid<K extends string>({
 }
 
 export default function PengaturanPage() {
+  const { role } = useAdminUser();
+  const manage = can(role, "settings");
+  return (
+    <div className="space-y-3">
+      <PageHeader
+        title="Pengaturan"
+        description={manage ? "Akun, identitas masjid, waktu sholat, dan lainnya." : "Akun Anda di panel pengurus."}
+      />
+      <AccountSection />
+      <AdminLinks />
+      {manage && <MosqueSettings />}
+    </div>
+  );
+}
+
+function MosqueSettings() {
   const [s, setS] = useState<Settings | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
-  const [pin, setPin] = useState("");
   const [now] = useState(() => Date.now());
 
   useEffect(() => {
@@ -95,27 +113,14 @@ export default function PengaturanPage() {
     setS({ ...s, hijriMonths: [...s.hijriMonths, { year, month, start: "" }] });
   };
 
-  const savePin = async () => {
-    setSaving("pin");
-    try {
-      await api("/api/admin/pin", { method: "PUT", body: { pin } });
-      setPin("");
-      toast.success("Kode unik berhasil diganti");
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(null);
-    }
-  };
-
   const embedOk = !!youtubeEmbedUrl(s.kabah.youtubeUrl);
   const backupOk = !!youtubeEmbedUrl(s.kabah.backupUrl);
 
   return (
-    <div className="space-y-3">
-      <PageHeader title="Pengaturan" description="Identitas masjid, waktu sholat, dan lainnya." />
+    <>
+      <h2 className="px-1 pt-4 text-sm font-bold tracking-wide text-sky-200/70 uppercase">Pengaturan masjid</h2>
 
-      <Section title="Identitas Masjid" desc="Nama, logo, dan alamat di header layar" defaultOpen>
+      <Section title="Identitas Masjid" desc="Nama, logo, dan alamat di header layar">
         <Field label="Nama masjid">
           <TextInput value={s.mosque.name} onChange={(e) => patch("mosque", { name: e.target.value })} />
         </Field>
@@ -296,15 +301,6 @@ export default function PengaturanPage() {
           Simpan lokasi
         </Button>
       </Section>
-
-      <Section title="Ganti Kode Unik" desc="Kode untuk masuk panel admin">
-        <Field label="Kode baru" help="Minimal 6 karakter. Semua perangkat lain akan otomatis keluar.">
-          <TextInput type="password" value={pin} onChange={(e) => setPin(e.target.value)} autoComplete="new-password" />
-        </Field>
-        <Button variant="gold" className="w-full" disabled={pin.length < 6} loading={saving === "pin"} onClick={savePin}>
-          Ganti kode
-        </Button>
-      </Section>
-    </div>
+    </>
   );
 }

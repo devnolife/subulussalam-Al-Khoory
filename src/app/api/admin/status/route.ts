@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { displayStatus } from "@/lib/realtime";
-import { requireAdmin } from "@/lib/api";
+import { authorize } from "@/lib/api";
 
 export async function GET() {
-  const denied = await requireAdmin();
-  if (denied) return denied;
+  const user = await authorize("remote");
+  if (user instanceof NextResponse) return user;
   return NextResponse.json(displayStatus());
 }

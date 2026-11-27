@@ -152,3 +152,23 @@ export async function getResource(name: ResourceName, id: number) {
   const rows = await query(`SELECT ${selectList(r.table)} FROM ${r.table} WHERE id = $1`, [id]);
   return rows[0] ? toCamel(rows[0]) : null;
 }
+
+const rupiah = (n: unknown) => `Rp${Number(n || 0).toLocaleString("id-ID")}`;
+
+/** Label singkat sebuah data untuk Riwayat aktivitas. */
+export function describeRecord(name: ResourceName, data: Record<string, unknown> | null): string {
+  if (!data) return "";
+  const s = (k: string) => (typeof data[k] === "string" ? (data[k] as string).trim() : "");
+  const parts: Record<ResourceName, string> = {
+    announcements: s("title") || s("body"),
+    kajian: s("title"),
+    jumat: [s("date"), s("khatib")].filter(Boolean).join(" · "),
+    finance: [s("date"), data.kind === "out" ? "Pengeluaran" : data.kind === "in" ? "Pemasukan" : "", data.amount != null ? rupiah(data.amount) : "", s("description")]
+      .filter(Boolean)
+      .join(" · "),
+    verses: s("source") || s("translation"),
+    slides: s("caption") || s("image"),
+    playlist: s("type"),
+  };
+  return parts[name].slice(0, 120);
+}
