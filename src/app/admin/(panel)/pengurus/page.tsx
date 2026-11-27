@@ -1,6 +1,7 @@
 "use client";
 
 import { CrudPage } from "@/components/admin/CrudPage";
+import { ExportButton, ToolBar } from "@/components/admin/share";
 import { Avatar } from "@/components/display/ui";
 import type { BoardMember } from "@/lib/types";
 
@@ -18,6 +19,11 @@ export default function PengurusAdmin() {
         { name: "active", label: "Tampil di layar", type: "bool" },
         { name: "sort", label: "Urutan", type: "number" },
       ]}
+      header={() => (
+        <ToolBar>
+          <ExportButton resource="board_members" />
+        </ToolBar>
+      )}
       renderItem={(m) => (
         <div className="flex items-center gap-3">
           <Avatar name={m.name} photo={m.photo || null} className="size-12 rounded-xl text-base" />

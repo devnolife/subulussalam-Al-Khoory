@@ -84,6 +84,17 @@ Semua menu berikut ada di **Konten** dan bisa dikelola admin maupun peran Konten
 
 Panel **Ramadhan & Hari Raya** hanya tampil di musimnya: sejak sehari sebelum 1 Ramadhan sampai akhir Ramadhan, pada malam yang sudah ada petugas tarawihnya, dan mulai 30 hari sebelum sholat Ied yang diisi. Isinya waktu imsak dan berbuka beserta hitung mundur berbuka, petugas tarawih malam ini dan berikutnya, serta info sholat Ied. Awal Ramadhan mengikuti pengaturan Kalender Hijriah, jadi isi awal bulan Ramadhan dan Syawal sesuai penetapan.
 
+## Bagikan ke WhatsApp dan ekspor CSV
+
+Tombol **Bagikan ke WhatsApp** menyusun teks siap kirim. Di HP, tombol ini membuka menu bagikan bawaan; di komputer, tombol ini membuka WhatsApp Web. Tombol ada di:
+
+- **Kas**: kartu **Laporan kas** di bagian atas. Pilih periode (bulan ini, bulan lain yang ada transaksinya, atau setahun) untuk melihat pemasukan, pengeluaran, dan saldo akhir. Teks yang dibagikan juga berisi saldo awal dan total per kategori. Nama donatur tidak pernah masuk ke teks yang dibagikan.
+- **Jadwal kajian**: kajian pekan ini (hari ini sampai enam hari ke depan) dan kajian dengan jadwal bebas.
+- **Petugas Jumat**: petugas Jumat terdekat.
+- **Sholat Ied**: tombol **Bagikan** pada tiap sholat Ied.
+
+Tombol **Unduh CSV** ada di halaman Kas (sesuai periode yang dipilih, termasuk nama donatur dan saldo berjalan), Jadwal kajian, Petugas Jumat, Petugas tarawih, dan Pengurus. Tiap peran hanya bisa mengunduh data yang boleh ia kelola, dan setiap unduhan tercatat di Riwayat aktivitas sebagai "Mengunduh CSV". File CSV memakai pemisah koma. Jika Excel menampilkan semua kolom dalam satu kolom, buka lewat **Data › From Text/CSV** dan pilih pemisah koma.
+
 ## Cadangan
 
 Buat cadangan database dengan `docker compose exec -T db pg_dump -U masjid -d masjid -Fc > masjid.dump`. Cadangkan juga volume `uploads` secara terpisah; dump database tidak berisi gambar. Simpan cadangan di lokasi aman dan lakukan uji pemulihan sebelum mengandalkannya.

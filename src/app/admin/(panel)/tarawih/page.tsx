@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CrudPage } from "@/components/admin/CrudPage";
+import { ExportButton, ToolBar } from "@/components/admin/share";
 import { linkSpeaker, speakerName, speakerOptions } from "@/components/admin/speakers";
 import { WEEKDAYS, weekdayOf } from "@/lib/kajian";
 import { formatDateStr, witaDateStr } from "@/lib/time";
@@ -24,6 +25,11 @@ export default function TarawihAdmin() {
         { name: "theme", label: "Tema ceramah (opsional)", type: "text" },
       ]}
       prepare={(p, lookups) => linkSpeaker(p, lookups, "speakerId", "speaker")}
+      header={() => (
+        <ToolBar>
+          <ExportButton resource="tarawih" />
+        </ToolBar>
+      )}
       renderItem={(t, lookups) => {
         const speaker = speakerName(lookups, t.speakerId, t.speaker);
         return (

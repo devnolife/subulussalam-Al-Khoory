@@ -1,10 +1,22 @@
 "use client";
 
+import { useMosqueName } from "@/components/admin/AdminUser";
 import { CrudPage } from "@/components/admin/CrudPage";
+import { ShareButton } from "@/components/admin/share";
 import { WEEKDAYS, weekdayOf } from "@/lib/kajian";
 import { upcomingIslamicDays } from "@/lib/islamic-days";
+import { iedText } from "@/lib/share";
 import { formatDateStr } from "@/lib/time";
 import { IED_KINDS, IED_LABELS, type Ied } from "@/lib/types";
+
+function IedShare({ ied }: { ied: Ied }) {
+  const mosque = useMosqueName();
+  return (
+    <ShareButton text={iedText(ied, mosque)} emptyMessage="" className="mt-3">
+      Bagikan
+    </ShareButton>
+  );
+}
 
 /** Perkiraan Ied terdekat menurut kalender Umm al-Qura sebagai isian awal. */
 function nextIed(): { kind: Ied["kind"]; date: string } {
@@ -38,6 +50,7 @@ export default function IedAdmin() {
           <p className="text-sm text-white/60">
             {[e.location, e.khatib && `Khatib: ${e.khatib}`, e.imam && `Imam: ${e.imam}`].filter(Boolean).join(" · ") || "-"}
           </p>
+          <IedShare ied={e} />
         </>
       )}
     />

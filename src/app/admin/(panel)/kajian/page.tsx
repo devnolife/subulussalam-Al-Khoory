@@ -1,11 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { CrudPage } from "@/components/admin/CrudPage";
+import { useMosqueName } from "@/components/admin/AdminUser";
+import { CrudPage, type Lookups } from "@/components/admin/CrudPage";
+import { ExportButton, ShareButton, ToolBar } from "@/components/admin/share";
 import { linkSpeaker, speakerName, speakerOptions } from "@/components/admin/speakers";
 import { WEEKDAYS, kajianScheduleLabel, kajianTimeLabel } from "@/lib/kajian";
+import { kajianWeekText } from "@/lib/share";
 import { witaDateStr, witaParts } from "@/lib/time";
 import type { Kajian } from "@/lib/types";
+
+function KajianTools({ items, lookups }: { items: Kajian[]; lookups: Lookups }) {
+  const mosque = useMosqueName();
+  const [now] = useState(() => Date.now());
+  const named = items.map((k) => ({ ...k, speaker: speakerName(lookups, k.speakerId, k.speaker) }));
+  return (
+    <ToolBar>
+      <ShareButton text={kajianWeekText(named, now, mosque)} emptyMessage="Tidak ada kajian aktif dalam 7 hari ke depan">
+        Bagikan jadwal pekan ini
+      </ShareButton>
+      <ExportButton resource="kajian" />
+    </ToolBar>
+  );
+}
 
 const RECURRENCE_OPTIONS = [
   { value: "weekly", label: "Rutin setiap pekan" },
@@ -98,6 +115,7 @@ export default function KajianAdmin() {
         { name: "sort", label: "Urutan", type: "number" },
       ]}
       prepare={(p, lookups) => linkSpeaker(prepareKajian(p), lookups, "speakerId", "speaker")}
+      header={(items, lookups) => <KajianTools items={items} lookups={lookups} />}
       renderItem={(k, lookups) => {
         const past = k.recurrence === "once" && !!k.date && k.date < today;
         const when = [kajianScheduleLabel(k), kajianTimeLabel(k)].filter(Boolean).join(" · ");

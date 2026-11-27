@@ -1,9 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Tags } from "lucide-react";
+import { ChevronRight, FileText, Tags } from "lucide-react";
+import { useMosqueName } from "@/components/admin/AdminUser";
 import { CrudPage, type Lookups } from "@/components/admin/CrudPage";
-import { Card } from "@/components/admin/ui";
+import { ExportButton, ShareButton, ToolBar } from "@/components/admin/share";
+import { Card, Select } from "@/components/admin/ui";
+import { financePeriods, financeReport } from "@/lib/finance-report";
+import { financeReportText } from "@/lib/share";
 import { formatDateStr, rupiah, witaDateStr } from "@/lib/time";
 import { ZISWAF_LABELS, type FinanceCategory, type FinanceEntry } from "@/lib/types";
 
@@ -13,6 +18,48 @@ const categoryLabel = (c: FinanceCategory) => {
   const tag = c.ziswaf ? ZISWAF_LABELS[c.ziswaf] : "";
   return tag && !c.name.toLowerCase().includes(tag.toLowerCase()) ? `${c.name} (${tag})` : c.name;
 };
+
+/** Rekap per periode untuk grup WhatsApp jamaah (tanpa nama donatur) dan unduhan CSV rinci. */
+function KasReport({ items, categories }: { items: FinanceEntry[]; categories: FinanceCategory[] }) {
+  const mosque = useMosqueName();
+  const [now] = useState(today);
+  const [key, setKey] = useState(() => now.slice(0, 7));
+  const periods = financePeriods(items, now);
+  const period = periods.find((p) => p.key === key) ?? periods[0];
+  const report = financeReport(items, categories, period);
+  const stats = [
+    { label: "Pemasukan", value: report.totalIn, tone: "text-emerald-300" },
+    { label: "Pengeluaran", value: report.totalOut, tone: "text-rose-300" },
+    { label: "Saldo akhir", value: report.closing, tone: "text-white" },
+  ];
+  return (
+    <Card className="space-y-3">
+      <div className="flex items-center gap-2">
+        <FileText className="size-5 text-gold-400" aria-hidden="true" />
+        <h2 className="font-bold">Laporan kas</h2>
+      </div>
+      <Select
+        aria-label="Periode laporan"
+        value={period.key}
+        onChange={(e) => setKey(e.target.value)}
+        options={periods.map((p) => ({ value: p.key, label: p.label }))}
+      />
+      <dl className="grid grid-cols-3 gap-2 text-center">
+        {stats.map((s) => (
+          <div key={s.label} className="rounded-2xl bg-white/5 px-1 py-2">
+            <dt className="text-[11px] text-white/50">{s.label}</dt>
+            <dd className={`text-sm font-bold tabular-nums ${s.tone}`}>{rupiah(s.value)}</dd>
+          </div>
+        ))}
+      </dl>
+      <ToolBar className="">
+        <ShareButton text={financeReportText(report, mosque)} emptyMessage="Belum ada transaksi" />
+        <ExportButton resource="finance" from={period.from} to={period.to} />
+      </ToolBar>
+      <p className="text-xs text-white/40">Teks WhatsApp berisi total per kategori tanpa nama donatur. CSV berisi rincian transaksi.</p>
+    </Card>
+  );
+}
 
 export default function KasAdmin() {
   return (
@@ -71,7 +118,7 @@ export default function KasAdmin() {
         if (category && category.kind !== p.kind) out.categoryId = "";
         return out;
       }}
-      header={(items) => {
+      header={(items, lookups) => {
         const month = today().slice(0, 7);
         const balance = items.reduce((s, r) => s + (r.kind === "in" ? r.amount : -r.amount), 0);
         const sum = (kind: "in" | "out") =>
@@ -101,6 +148,7 @@ export default function KasAdmin() {
               <span className="flex-1">Kategori kas &amp; ZISWAF</span>
               <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
             </Link>
+            <KasReport items={items} categories={categoriesOf(lookups)} />
           </div>
         );
       }}

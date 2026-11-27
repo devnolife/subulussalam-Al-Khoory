@@ -7,10 +7,18 @@ import { can, homeFor, routePermission, type SessionUser } from "@/lib/permissio
 import { EmptyState } from "./ui";
 
 const AdminUserContext = createContext<SessionUser | null>(null);
+const MosqueNameContext = createContext("");
 
-export function AdminUserProvider({ user, children }: { user: SessionUser; children: ReactNode }) {
-  return <AdminUserContext.Provider value={user}>{children}</AdminUserContext.Provider>;
+export function AdminUserProvider({ user, mosqueName, children }: { user: SessionUser; mosqueName: string; children: ReactNode }) {
+  return (
+    <AdminUserContext.Provider value={user}>
+      <MosqueNameContext.Provider value={mosqueName}>{children}</MosqueNameContext.Provider>
+    </AdminUserContext.Provider>
+  );
 }
+
+/** Nama masjid dari Pengaturan (saat halaman panel dimuat), untuk teks yang dibagikan. */
+export const useMosqueName = () => useContext(MosqueNameContext);
 
 export function useAdminUser(): SessionUser {
   const user = useContext(AdminUserContext);

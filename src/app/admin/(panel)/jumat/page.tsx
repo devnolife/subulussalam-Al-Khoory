@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CrudPage } from "@/components/admin/CrudPage";
+import { useMosqueName } from "@/components/admin/AdminUser";
+import { CrudPage, type Lookups } from "@/components/admin/CrudPage";
+import { ExportButton, ShareButton, ToolBar } from "@/components/admin/share";
 import { linkSpeaker, speakerName, speakerOptions } from "@/components/admin/speakers";
+import { jumatText } from "@/lib/share";
 import { addDays, formatDateStr, witaDateStr, witaParts } from "@/lib/time";
 import type { Jumat } from "@/lib/types";
 
@@ -10,6 +13,19 @@ function nextFriday(): string {
   const now = Date.now();
   const diff = (5 - witaParts(now).weekday + 7) % 7;
   return addDays(witaDateStr(now), diff);
+}
+
+function JumatTools({ items, lookups, today }: { items: Jumat[]; lookups: Lookups; today: string }) {
+  const mosque = useMosqueName();
+  const named = items.map((j) => ({ ...j, khatib: speakerName(lookups, j.khatibSpeakerId, j.khatib) }));
+  return (
+    <ToolBar>
+      <ShareButton text={jumatText(named, today, mosque)} emptyMessage="Belum ada jadwal Jum'at mendatang">
+        Bagikan petugas terdekat
+      </ShareButton>
+      <ExportButton resource="jumat" />
+    </ToolBar>
+  );
 }
 
 export default function JumatAdmin() {
@@ -36,6 +52,7 @@ export default function JumatAdmin() {
         { name: "theme", label: "Tema khutbah (opsional)", type: "text" },
       ]}
       prepare={(p, lookups) => linkSpeaker(p, lookups, "khatibSpeakerId", "khatib")}
+      header={(items, lookups) => <JumatTools items={items} lookups={lookups} today={today} />}
       renderItem={(j, lookups) => (
         <>
           <p className={`text-sm font-semibold ${j.date < today ? "text-white/40" : "text-gold-400"}`}>
