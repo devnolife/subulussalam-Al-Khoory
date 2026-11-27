@@ -36,6 +36,8 @@ function describe(e: AuditEntry): string {
       return `Menghapus ${resource}`;
     case "export":
       return `Mengunduh CSV ${resource}`;
+    case "import":
+      return `Mengimpor ${resource} dari file`;
     case "command":
       return "Remote layar TV";
     case "settings":

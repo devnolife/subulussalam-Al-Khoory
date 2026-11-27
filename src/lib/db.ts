@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS finance_categories (
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS category_id INT REFERENCES finance_categories(id) ON DELETE SET NULL;
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS donor TEXT NOT NULL DEFAULT '';
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS show_donor BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE finance ADD COLUMN IF NOT EXISTS external_ref TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS finance_external_ref_key ON finance (external_ref);
 CREATE INDEX IF NOT EXISTS finance_date_idx ON finance (date DESC, id DESC);
 CREATE TABLE IF NOT EXISTS speakers (
   id SERIAL PRIMARY KEY, name TEXT NOT NULL, profile TEXT NOT NULL DEFAULT '', photo TEXT NOT NULL DEFAULT '',
@@ -206,4 +208,23 @@ export async function query<T extends QueryResultRow = QueryResultRow>(sql: stri
   await ready();
   const res = await pool().query<T>(sql, params);
   return res.rows;
+}
+
+export type TxQuery = <T extends QueryResultRow = QueryResultRow>(sql: string, params?: unknown[]) => Promise<T[]>;
+
+/** Jalankan beberapa query sebagai satu transaksi; dibatalkan seluruhnya bila ada yang gagal. */
+export async function transaction<R>(fn: (q: TxQuery) => Promise<R>): Promise<R> {
+  await ready();
+  const client = await pool().connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(async (sql, params = []) => (await client.query(sql, params)).rows);
+    await client.query("COMMIT");
+    return result;
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw e;
+  } finally {
+    client.release();
+  }
 }

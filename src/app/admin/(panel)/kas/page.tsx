@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, FileText, Tags } from "lucide-react";
+import { ChevronRight, FileText, Tags, Upload } from "lucide-react";
 import { useMosqueName } from "@/components/admin/AdminUser";
 import { CrudPage, type Lookups } from "@/components/admin/CrudPage";
 import { ExportButton, ShareButton, ToolBar } from "@/components/admin/share";
@@ -146,6 +146,14 @@ export default function KasAdmin() {
             >
               <Tags className="size-5 text-gold-400" aria-hidden="true" />
               <span className="flex-1">Kategori kas &amp; ZISWAF</span>
+              <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/admin/kas/impor"
+              className="card flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-bold transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.98]"
+            >
+              <Upload className="size-5 text-gold-400" aria-hidden="true" />
+              <span className="flex-1">Impor dari CSV/Excel</span>
               <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
             </Link>
             <KasReport items={items} categories={categoriesOf(lookups)} />

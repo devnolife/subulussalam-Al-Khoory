@@ -182,6 +182,8 @@ export type FinanceEntry = {
   donor: string;
   /** false = tampil sebagai "Hamba Allah" di layar. */
   showDonor: boolean;
+  /** Kunci baris hasil impor CSV/Excel; null untuk transaksi yang dicatat manual. */
+  externalRef?: string | null;
 };
 
 export type Verse = {

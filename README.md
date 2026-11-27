@@ -49,13 +49,13 @@ Admin menambah pengurus lain di Pengaturan › **Pengguna**, lalu memilih perann
 | Peran | Akses |
 | --- | --- |
 | Admin | Semua menu, pengaturan masjid, pengguna, dan riwayat aktivitas |
-| Bendahara | Kas dan infak, kategori kas, dan donatur |
+| Bendahara | Kas dan infak, kategori kas, donatur, dan impor kas dari CSV/Excel |
 | Konten | Konten layar (pengumuman, kajian, pembicara, Jumat, tarawih, sholat Ied, pengurus, ayat, slide), urutan tampilan, upload gambar, dan remote TV |
 | Operator TV | Remote TV dan urutan tampilan |
 
 Di halaman Pengguna, admin juga bisa mengubah peran, mereset password, dan menonaktifkan akun; akun yang dinonaktifkan atau direset langsung keluar dari semua perangkat. Akun tidak dihapus agar riwayat tetap utuh. Admin tidak bisa menonaktifkan akunnya sendiri, dan admin aktif terakhir tidak bisa diturunkan perannya atau dinonaktifkan. Setelah 5 kali salah password untuk satu nama pengguna (atau 20 kali dari satu alamat), login dikunci 5 menit.
 
-Pengaturan › **Riwayat aktivitas** (khusus admin) mencatat siapa yang login, keluar, menambah, mengubah, atau menghapus konten dan kas, mengubah pengaturan, mengelola pengguna, serta mengirim perintah remote. Riwayat disimpan satu tahun.
+Pengaturan › **Riwayat aktivitas** (khusus admin) mencatat siapa yang login, keluar, menambah, mengubah, atau menghapus konten dan kas, mengubah pengaturan, mengelola pengguna, mengunduh CSV, mengimpor kas, serta mengirim perintah remote. Riwayat disimpan satu tahun.
 
 Beranda Remote menampilkan kartu ringkasan sesuai peran: saldo kas, pemasukan dan pengeluaran bulan ini, dan jumlah donatur bulan ini (admin), serta jumlah pengumuman, kajian, dan slide aktif dan petugas Jumat berikutnya (admin dan konten). Bendahara melihat ringkasan kas di bagian atas halaman Kas.
 
@@ -94,6 +94,30 @@ Tombol **Bagikan ke WhatsApp** menyusun teks siap kirim. Di HP, tombol ini membu
 - **Sholat Ied**: tombol **Bagikan** pada tiap sholat Ied.
 
 Tombol **Unduh CSV** ada di halaman Kas (sesuai periode yang dipilih, termasuk nama donatur dan saldo berjalan), Jadwal kajian, Petugas Jumat, Petugas tarawih, dan Pengurus. Tiap peran hanya bisa mengunduh data yang boleh ia kelola, dan setiap unduhan tercatat di Riwayat aktivitas sebagai "Mengunduh CSV". File CSV memakai pemisah koma. Jika Excel menampilkan semua kolom dalam satu kolom, buka lewat **Data › From Text/CSV** dan pilih pemisah koma.
+
+## Impor kas dari CSV/Excel
+
+Kas › **Impor dari CSV/Excel** (admin dan bendahara) memasukkan banyak transaksi sekaligus, misalnya dari buku kas lama, laporan bank, atau ekspor aplikasi keuangan lain.
+
+1. Pilih file **.csv** atau **.xlsx**, paling besar 5 MB dan 5.000 transaksi sekali impor. File .xls berisi tabel HTML (biasa dari ekspor aplikasi web) juga terbaca. File .xls lama dari Excel 97–2003 perlu disimpan ulang sebagai .xlsx atau CSV. Bila file Excel punya beberapa lembar, pilih lembarnya; lembar tersembunyi tidak dibaca.
+2. **Cocokkan kolom.** Aplikasi menebak baris judul kolom dan kolom tanggal, nominal, kategori, keterangan, donatur, dan nomor bukti dari judulnya. Periksa dan ubah bila perlu, lalu pilih cara membaca jenis transaksi:
+   - kolom pemasukan dan pengeluaran terpisah,
+   - kolom jenis (masuk/keluar),
+   - satu kolom nominal, minus untuk pengeluaran, atau
+   - semua baris pemasukan, atau semua baris pengeluaran.
+
+   Kolom **Debet/Kredit** tidak ditebak karena artinya berbeda: di buku kas debet berarti masuk, di rekening koran bank debet berarti keluar. Pilih kolomnya sendiri. Tanggal angka seperti `05/03/2026` dibaca hari/bulan/tahun kecuali urutannya diubah; tanggal bernama bulan (`5 Maret 2026`) dan sel tanggal Excel juga terbaca. Nominal seperti `1.250.000`, `Rp 1.250.000,-`, dan `Rp -` (nol) terbaca; `(20.000)` dibaca sebagai minus.
+3. **Periksa data.** Tiap transaksi mendapat status:
+   - **Baru**: akan diimpor.
+   - **Sudah pernah diimpor**: dilewati, jadi file yang sama aman diimpor ulang. Transaksi dikenali dari tanggal dan nomor bukti bila kolomnya dipetakan (nomor bukti boleh mulai lagi dari 1 tiap bulan), atau dari tanggal, jenis, nominal, keterangan, kategori, dan donatur. Bila memakai nomor bukti, nominal yang diubah di file tidak memperbarui transaksi yang sudah tersimpan.
+   - **Mirip data yang ada**: tanggal, jenis, dan nominalnya sama dengan transaksi yang sudah tercatat, misalnya pernah dicatat manual. Dilewati kecuali **Tetap impor transaksi yang mirip** diaktifkan.
+   - **Tidak terbaca**: baris dan alasannya ditampilkan. Perbaiki file, lalu pilih ulang.
+
+   Baris judul laporan, saldo awal, total, dan nominal 0 dilewati otomatis.
+4. Tentukan **kategori** untuk tiap nama kategori di file: masukkan ke kategori yang ada (dipilih otomatis bila namanya sama), buat kategori baru, atau tanpa kategori. Kategori baru otomatis ditandai ZISWAF bila namanya mengandung zakat, infaq, sedekah, atau wakaf.
+5. **Impor.** Semua transaksi disimpan sekaligus; bila ada kesalahan, tidak ada yang tersimpan. Setiap impor tercatat di Riwayat aktivitas.
+
+Nama donatur hanya dibaca untuk pemasukan. Tanpa kolom "Tampilkan nama" berisi Ya/Tidak, donatur tampil di layar sebagai "Hamba Allah". File dari **Unduh CSV** di halaman Kas bisa diimpor kembali tanpa membuat transaksi ganda. Tidak ada tombol untuk membatalkan impor: periksa contoh transaksi sebelum mengimpor, dan hapus transaksi yang keliru satu per satu di halaman Kas. Transaksi yang sudah dihapus akan masuk lagi bila file yang sama diimpor ulang.
 
 ## Cadangan
 
