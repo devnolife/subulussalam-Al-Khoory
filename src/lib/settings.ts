@@ -14,9 +14,11 @@ export const DEFAULT_SETTINGS: Settings = {
     iqamahMin: { subuh: 10, dzuhur: 10, ashar: 10, maghrib: 7, isya: 10 },
     shalatMin: { subuh: 10, dzuhur: 10, ashar: 10, maghrib: 10, isya: 10 },
     adzanSec: 180,
+    doaSec: 60,
     jumatMin: 45,
   },
   hijriOffset: 0,
+  hijriMonths: [],
   kabah: {
     youtubeUrl: "https://www.youtube.com/watch?v=l43w1oD0B8g",
     backupUrl: "https://www.youtube.com/watch?v=NGJ2z3cIKHI",

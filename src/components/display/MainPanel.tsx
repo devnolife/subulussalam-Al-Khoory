@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DisplayState, ModuleType, PlaylistItem } from "@/lib/types";
 import { activeItems, contentAvailability } from "@/lib/playlist";
 import { SunEmblem } from "./SunEmblem";
+import { HariBesarPanel } from "./HariBesarPanel";
 import {
   AyatPanel,
   JumatPanel,
@@ -19,7 +20,7 @@ function itemDuration(item: PlaylistItem, state: DisplayState): number {
   return item.type === "slides" ? item.durationSec * Math.max(1, state.slides.length) : item.durationSec;
 }
 
-function renderModule(type: ModuleType, state: DisplayState, item: PlaylistItem) {
+function renderModule(type: ModuleType, state: DisplayState, item: PlaylistItem, now: number) {
   switch (type) {
     case "kabah":
       return <KabahPanel state={state} />;
@@ -37,6 +38,8 @@ function renderModule(type: ModuleType, state: DisplayState, item: PlaylistItem)
       return <QrisPanel state={state} />;
     case "pengumuman":
       return <PengumumanPanel state={state} />;
+    case "haribesar":
+      return <HariBesarPanel state={state} now={now} />;
   }
 }
 
@@ -93,7 +96,7 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
     <section className={`relative min-w-0 flex-1 overflow-hidden rounded-[32px] ${fullBleed ? "bg-navy-900" : "card"}`}>
       {!fullBleed && <div className="pattern pattern-fade pointer-events-none absolute inset-0" />}
       <div key={`${current.type}-${cursor.startedAt}`} className="animate-panel-in relative size-full">
-        {renderModule(current.type, state, current)}
+        {renderModule(current.type, state, current, now)}
       </div>
       {items.length > 1 && (
         <div

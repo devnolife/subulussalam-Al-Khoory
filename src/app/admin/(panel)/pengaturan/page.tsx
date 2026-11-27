@@ -4,10 +4,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/components/admin/api";
-import { Button, Field, ImageField, PageHeader, TextInput, Toggle } from "@/components/admin/ui";
-import { FARDH_KEYS, PRAYER_KEYS, PRAYER_LABELS, type Settings } from "@/lib/types";
+import { Button, Field, ImageField, PageHeader, Select, TextInput, Toggle } from "@/components/admin/ui";
+import { FARDH_KEYS, PRAYER_KEYS, PRAYER_LABELS, type HijriMonthStart, type Settings } from "@/lib/types";
 import { youtubeEmbedUrl } from "@/lib/youtube";
-import { formatHijri } from "@/lib/hijri";
+import { HIJRI_MONTHS, formatHijri, hijriCalendar, hijriParts } from "@/lib/hijri";
 
 function Section({ title, desc, children, defaultOpen }: { title: string; desc: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
@@ -72,16 +72,27 @@ export default function PengaturanPage() {
       prev ? { ...prev, [key]: typeof value === "object" && value !== null ? { ...(prev[key] as object), ...value } : value } : prev,
     );
 
-  const save = async (key: keyof Settings) => {
-    setSaving(key);
+  const save = async (key: keyof Settings | (keyof Settings)[]) => {
+    const keys = Array.isArray(key) ? key : [key];
+    setSaving(keys[0]);
     try {
-      setS(await api<Settings>("/api/admin/settings", { method: "PUT", body: { [key]: s[key] } }));
+      setS(await api<Settings>("/api/admin/settings", { method: "PUT", body: Object.fromEntries(keys.map((k) => [k, s[k]])) }));
       toast.success("Pengaturan tersimpan");
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setSaving(null);
     }
+  };
+
+  const calendar = hijriCalendar(s);
+  const setMonth = (index: number, value: Partial<HijriMonthStart>) =>
+    setS({ ...s, hijriMonths: s.hijriMonths.map((m, i) => (i === index ? { ...m, ...value } : m)) });
+  const addMonth = () => {
+    const h = hijriParts(now, calendar);
+    const month = h.month === 12 ? 1 : h.month + 1;
+    const year = h.month === 12 ? h.year + 1 : h.year;
+    setS({ ...s, hijriMonths: [...s.hijriMonths, { year, month, start: "" }] });
   };
 
   const savePin = async () => {
@@ -191,6 +202,9 @@ export default function PengaturanPage() {
           <Field label="Layar adzan (detik)">
             <TextInput type="number" value={String(s.prayer.adzanSec)} onChange={(e) => patch("prayer", { adzanSec: Number(e.target.value) })} />
           </Field>
+          <Field label="Layar doa setelah adzan (detik)" help="0 = tanpa layar doa. Tidak tampil saat Jum'at.">
+            <TextInput type="number" min={0} max={600} value={String(s.prayer.doaSec)} onChange={(e) => patch("prayer", { doaSec: Number(e.target.value) })} />
+          </Field>
           <Field label="Khutbah+sholat Jum'at (menit)">
             <TextInput type="number" value={String(s.prayer.jumatMin)} onChange={(e) => patch("prayer", { jumatMin: Number(e.target.value) })} />
           </Field>
@@ -209,10 +223,56 @@ export default function PengaturanPage() {
       </Section>
 
       <Section title="Kalender Hijriah" desc="Sesuaikan dengan keputusan Muhammadiyah">
-        <Field label="Koreksi hari" help={`Pratinjau: ${formatHijri(now, s.hijriOffset)}`}>
+        <p className="rounded-xl bg-white/5 p-3 text-sm">
+          Hari ini: <span className="font-semibold text-gold-400">{formatHijri(now, calendar)}</span>
+        </p>
+        <Field label="Koreksi hari" help="Hanya dipakai bila tidak ada awal bulan di bawah yang berlaku.">
           <TextInput type="number" min={-3} max={3} value={String(s.hijriOffset)} onChange={(e) => setS({ ...s, hijriOffset: Number(e.target.value) })} />
         </Field>
-        <Button className="w-full" loading={saving === "hijriOffset"} onClick={() => save("hijriOffset")}>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-gold-400">Awal bulan sesuai penetapan</p>
+            <p className="text-xs text-white/50">
+              Isi tanggal Masehi 1 Ramadhan, 1 Syawal, 1 Dzulhijjah, dan bulan lain sesuai maklumat. Tanggal Hijriah mengikuti
+              penetapan ini mulai sehari sebelumnya sampai awal bulan berikutnya yang diisi, paling lama sekitar satu tahun.
+            </p>
+          </div>
+          {s.hijriMonths.map((m, i) => (
+            <div key={i} className="grid grid-cols-[1fr_5.5rem] gap-2 rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/[0.06]">
+              <Field label="Bulan">
+                <Select
+                  value={String(m.month)}
+                  onChange={(e) => setMonth(i, { month: Number(e.target.value) })}
+                  options={HIJRI_MONTHS.map((label, idx) => ({ value: String(idx + 1), label }))}
+                />
+              </Field>
+              <Field label="Tahun H">
+                <TextInput type="number" inputMode="numeric" value={String(m.year)} onChange={(e) => setMonth(i, { year: Number(e.target.value) })} />
+              </Field>
+              <Field label="Tanggal 1 (Masehi)">
+                <TextInput type="date" value={m.start} onChange={(e) => setMonth(i, { start: e.target.value })} />
+              </Field>
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setS({ ...s, hijriMonths: s.hijriMonths.filter((_, idx) => idx !== i) })}
+                >
+                  Hapus
+                </Button>
+              </div>
+            </div>
+          ))}
+          <Button variant="ghost" className="w-full" onClick={addMonth}>
+            Tambah awal bulan
+          </Button>
+        </div>
+        <Button
+          className="w-full"
+          disabled={s.hijriMonths.some((m) => !m.start)}
+          loading={saving === "hijriOffset"}
+          onClick={() => save(["hijriOffset", "hijriMonths"])}
+        >
           Simpan
         </Button>
       </Section>

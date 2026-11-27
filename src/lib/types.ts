@@ -17,7 +17,7 @@ export const PRAYER_LABELS: Record<PrayerKey, string> = {
 export type PrayerTimes = Record<PrayerKey, string>;
 export type DayTimes = { date: string; times: PrayerTimes; source: "kemenag" | "offline" };
 
-export const MODULE_TYPES = ["kabah", "slides", "kajian", "jumat", "kas", "ayat", "qris", "pengumuman"] as const;
+export const MODULE_TYPES = ["kabah", "slides", "kajian", "jumat", "kas", "ayat", "qris", "pengumuman", "haribesar"] as const;
 export type ModuleType = (typeof MODULE_TYPES)[number];
 export const MODULE_LABELS: Record<ModuleType, string> = {
   kabah: "Live Ka'bah",
@@ -28,6 +28,7 @@ export const MODULE_LABELS: Record<ModuleType, string> = {
   ayat: "Ayat / Hadits",
   qris: "QRIS Donasi",
   pengumuman: "Pengumuman",
+  haribesar: "Hari Besar Islam",
 };
 
 export type PlaylistItem = {
@@ -99,14 +100,20 @@ export type PrayerConfig = {
   iqamahMin: Record<FardhKey, number>;
   shalatMin: Record<FardhKey, number>;
   adzanSec: number;
+  /** Lama layar doa setelah adzan; 0 = tanpa layar doa. Tidak dipakai saat Jum'at. */
+  doaSec: number;
   jumatMin: number;
 };
+
+export type HijriMonthStart = { year: number; month: number; start: string };
 
 export type Settings = {
   mosque: { name: string; subtitle: string; address: string; logo: string | null };
   location: { lat: number; lng: number; kemenagCityId: string; cityName: string };
   prayer: PrayerConfig;
   hijriOffset: number;
+  /** Tanggal Masehi awal bulan Hijriah sesuai penetapan (mis. Muhammadiyah); menimpa perhitungan Umm al-Qura. */
+  hijriMonths: HijriMonthStart[];
   kabah: { youtubeUrl: string; backupUrl: string; sound: boolean };
   qris: { image: string | null; bankName: string; accountNo: string; accountName: string; note: string };
   emergency: { active: boolean; text: string };
@@ -125,7 +132,7 @@ export type FinanceSummary = {
 export type Weather = { temperature: number; code: number; label: string; updatedAt: number } | null;
 
 export type DisplayState = {
-  demo?: { phase: "normal" | "adzan" | "iqamah" | "shalat" | "emergency" };
+  demo?: { phase: "normal" | "adzan" | "doa" | "iqamah" | "shalat" | "emergency" };
   settings: Omit<Settings, never>;
   playlist: PlaylistItem[];
   announcements: Announcement[];

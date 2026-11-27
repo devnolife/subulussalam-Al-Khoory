@@ -3,8 +3,14 @@ import { computeOfflineTimes } from "./prayer/offline";
 import { addDays, witaDateStr, witaParts } from "./time";
 import { MODULE_TYPES, type DisplayState, type ModuleType } from "./types";
 
-const PHASES = ["normal", "adzan", "iqamah", "shalat", "emergency"] as const;
+const PHASES = ["normal", "adzan", "doa", "iqamah", "shalat", "emergency"] as const;
 type DemoPhase = (typeof PHASES)[number];
+const PHASE_ELAPSED_MS: Partial<Record<DemoPhase, number>> = {
+  adzan: 30_000,
+  doa: DEFAULT_SETTINGS.prayer.adzanSec * 1000 + 20_000,
+  iqamah: 5 * 60_000,
+  shalat: 11 * 60_000,
+};
 
 /** Data contoh sepenuhnya terpisah dari database dan bukan informasi masjid sebenarnya. */
 export function createDemoState(now: number, module: string | null, phase: string | null): DisplayState {
@@ -19,8 +25,8 @@ export function createDemoState(now: number, module: string | null, phase: strin
   settings.qris.image = "/demo-qris.svg";
   settings.emergency = { active: selectedPhase === "emergency", text: "SIMULASI: Pengumuman darurat dari pengurus masjid." };
 
-  const elapsed = selectedPhase === "adzan" ? 30_000 : selectedPhase === "iqamah" ? 4 * 60_000 : 11 * 60_000;
-  if (selectedPhase === "adzan" || selectedPhase === "iqamah" || selectedPhase === "shalat") {
+  const elapsed = PHASE_ELAPSED_MS[selectedPhase];
+  if (elapsed !== undefined) {
     settings.manualPrayer = { prayer: "dzuhur", startedAt: now - elapsed };
   }
 

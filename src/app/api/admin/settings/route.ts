@@ -5,6 +5,7 @@ import { handleError, requireAdmin } from "@/lib/api";
 import { publish } from "@/lib/realtime";
 import { clearPrayerCache } from "@/lib/prayer/service";
 import { FARDH_KEYS, PRAYER_KEYS } from "@/lib/types";
+import { hijriStartShift } from "@/lib/hijri";
 
 const minutes = z.coerce.number().int().min(-60).max(60);
 const fardhMinutes = z.coerce.number().int().min(0).max(120);
@@ -29,9 +30,27 @@ const schema = z
       iqamahMin: z.object(Object.fromEntries(FARDH_KEYS.map((k) => [k, fardhMinutes])) as Record<(typeof FARDH_KEYS)[number], typeof fardhMinutes>),
       shalatMin: z.object(Object.fromEntries(FARDH_KEYS.map((k) => [k, fardhMinutes])) as Record<(typeof FARDH_KEYS)[number], typeof fardhMinutes>),
       adzanSec: z.coerce.number().int().min(30).max(900),
+      doaSec: z.coerce.number().int().min(0).max(600).default(60),
       jumatMin: z.coerce.number().int().min(10).max(120),
     }),
     hijriOffset: z.coerce.number().int().min(-3).max(3),
+    hijriMonths: z
+      .array(
+        z.object({
+          year: z.coerce.number().int().min(1400).max(1600),
+          month: z.coerce.number().int().min(1).max(12),
+          start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal mulai harus YYYY-MM-DD"),
+        }),
+      )
+      .max(36)
+      .refine(
+        (list) => new Set(list.map((m) => `${m.year}-${m.month}`)).size === list.length,
+        "Bulan Hijriah yang sama diisi lebih dari sekali",
+      )
+      .refine(
+        (list) => list.every((m) => hijriStartShift(m) !== null),
+        "Ada tanggal awal bulan Hijriah yang selisihnya lebih dari 5 hari dari perhitungan. Periksa bulan dan tahunnya.",
+      ),
     kabah: z.object({ youtubeUrl: str(300), backupUrl: str(300).default(""), sound: z.boolean().default(true) }),
     qris: z.object({
       image: z.string().max(300).nullable(),

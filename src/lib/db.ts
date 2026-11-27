@@ -38,6 +38,7 @@ const SEED_PLAYLIST: [string, number][] = [
   ["kas", 15],
   ["qris", 15],
   ["pengumuman", 15],
+  ["haribesar", 15],
 ];
 
 const SEED_VERSES: [string, string, string][] = [

@@ -36,5 +36,7 @@ export function contentAvailability(state: DisplayState): Record<ModuleType, boo
     ayat: !!state.verse,
     qris: !!(q.image || q.accountNo),
     pengumuman: state.announcements.some((a) => a.showPanel),
+    // Selalu ada hari besar berikutnya yang bisa dihitung mundur.
+    haribesar: true,
   };
 }

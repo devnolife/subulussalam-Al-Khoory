@@ -8,6 +8,7 @@ import { IconTile } from "@/components/display/ui";
 const PHASES = [
   ["normal", "Tampilan normal"],
   ["adzan", "Azan"],
+  ["doa", "Doa setelah azan"],
   ["iqamah", "Hitung mundur iqamah"],
   ["shalat", "Layar saat sholat"],
   ["emergency", "Pengumuman darurat"],

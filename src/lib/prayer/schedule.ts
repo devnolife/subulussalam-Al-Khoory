@@ -44,6 +44,7 @@ export function currentPrayer(now: number, today: DayTimes): PrayerKey | null {
 export type PrayerPhase =
   | { kind: "normal" }
   | { kind: "adzan"; prayer: FardhKey; isJumat: boolean; endsAt: number }
+  | { kind: "doa"; prayer: FardhKey; startsAt: number; endsAt: number; iqamahAt: number }
   | { kind: "iqamah"; prayer: FardhKey; startsAt: number; endsAt: number }
   | { kind: "shalat"; prayer: FardhKey; isJumat: boolean; endsAt: number };
 
@@ -55,15 +56,17 @@ function phaseFor(now: number, prayer: FardhKey, start: number, cfg: PrayerConfi
     const end = start + cfg.jumatMin * 60_000;
     return now < end ? { kind: "shalat", prayer, isJumat, endsAt: end } : null;
   }
-  const iqamahAt = Math.max(adzanEnd, start + cfg.iqamahMin[prayer] * 60_000);
-  if (now < iqamahAt) return { kind: "iqamah", prayer, startsAt: adzanEnd, endsAt: iqamahAt };
+  const doaEnd = adzanEnd + Math.max(0, cfg.doaSec ?? 0) * 1000;
+  const iqamahAt = Math.max(doaEnd, start + cfg.iqamahMin[prayer] * 60_000);
+  if (now < doaEnd) return { kind: "doa", prayer, startsAt: adzanEnd, endsAt: doaEnd, iqamahAt };
+  if (now < iqamahAt) return { kind: "iqamah", prayer, startsAt: doaEnd, endsAt: iqamahAt };
   const end = iqamahAt + cfg.shalatMin[prayer] * 60_000;
   return now < end ? { kind: "shalat", prayer, isJumat, endsAt: end } : null;
 }
 
 /**
- * Fase layar sholat: Adzan → hitung mundur Iqamah → layar shaf/sholat.
- * Hari Jum'at, Dzuhur diganti alur Jum'at (adzan → khutbah & sholat).
+ * Fase layar sholat: Adzan → doa setelah adzan → hitung mundur Iqamah → layar shaf/sholat.
+ * Hari Jum'at, Dzuhur diganti alur Jum'at (adzan → khutbah & sholat), tanpa layar doa.
  */
 export function prayerPhase(
   now: number,

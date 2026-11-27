@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { activeItems } from "../src/lib/playlist";
 import { youtubeEmbedUrl, youtubeSources } from "../src/lib/youtube";
-import { formatHijri } from "../src/lib/hijri";
+import { formatHijri, hijriStartShift } from "../src/lib/hijri";
+import { upcomingIslamicDays } from "../src/lib/islamic-days";
 import { witaToMs } from "../src/lib/time";
 import { MODULE_TYPES, type ModuleType, type PlaylistItem } from "../src/lib/types";
 
@@ -23,7 +24,7 @@ describe("activeItems", () => {
     const res = activeItems(list, { ...all, qris: false }, noOverride, 0);
     expect(types(res)).not.toContain("kas");
     expect(types(res)).not.toContain("qris");
-    expect(res).toHaveLength(6);
+    expect(res).toHaveLength(MODULE_TYPES.length - 2);
   });
 
   it("mengikuti urutan sort", () => {
@@ -84,5 +85,59 @@ describe("formatHijri", () => {
     const base = formatHijri(ms);
     expect(base).toMatch(/^\d{1,2} [A-Za-z' ]+ 14\d\d H$/);
     expect(formatHijri(ms, 1)).not.toBe(base);
+  });
+});
+
+describe("awal bulan Hijriah sesuai penetapan", () => {
+  const noon = (date: string) => witaToMs(date, "12:00");
+  const ramadhanLater = { offset: 0, months: [{ year: 1447, month: 9, start: "2026-02-19" }] };
+
+  it("tanpa penetapan mengikuti Umm al-Qura", () => {
+    expect(formatHijri(noon("2026-02-18"), { offset: 0, months: [] })).toBe("1 Ramadhan 1447 H");
+  });
+
+  it("menggeser kalender sehingga tanggal yang diisi menjadi hari pertama", () => {
+    expect(formatHijri(noon("2026-02-18"), ramadhanLater)).toBe("29 Sya'ban 1447 H");
+    expect(formatHijri(noon("2026-02-19"), ramadhanLater)).toBe("1 Ramadhan 1447 H");
+    expect(formatHijri(noon("2026-03-20"), ramadhanLater)).toBe("30 Ramadhan 1447 H");
+    expect(formatHijri(noon("2026-03-21"), ramadhanLater)).toBe("1 Syawal 1447 H");
+  });
+
+  it("penetapan berikutnya menggantikan geseran sebelumnya", () => {
+    const cal = { offset: 0, months: [...ramadhanLater.months, { year: 1447, month: 10, start: "2026-03-20" }] };
+    expect(formatHijri(noon("2026-03-19"), cal)).toBe("30 Ramadhan 1447 H");
+    expect(formatHijri(noon("2026-03-20"), cal)).toBe("1 Syawal 1447 H");
+  });
+
+  it("penetapan yang terlalu jauh dari perhitungan ditolak dan diabaikan", () => {
+    const wrong = { year: 1447, month: 9, start: "2026-04-30" };
+    expect(hijriStartShift(wrong)).toBeNull();
+    expect(hijriStartShift(ramadhanLater.months[0])).toBe(-1);
+    expect(formatHijri(noon("2026-04-30"), { offset: 0, months: [wrong] })).toBe(formatHijri(noon("2026-04-30")));
+  });
+});
+
+describe("upcomingIslamicDays", () => {
+  const from = witaToMs("2026-02-01", "12:00");
+
+  it("mengurutkan hari besar terdekat beserta hitung mundurnya", () => {
+    const list = upcomingIslamicDays(from, 0, 4);
+    expect(list.map((e) => [e.key, e.date, e.daysLeft])).toEqual([
+      ["nisfu-syaban", "2026-02-03", 2],
+      ["ramadhan", "2026-02-18", 17],
+      ["nuzulul-quran", "2026-03-06", 33],
+      ["idul-fitri", "2026-03-20", 47],
+    ]);
+  });
+
+  it("mengikuti awal bulan yang ditetapkan pengurus", () => {
+    const cal = { offset: 0, months: [{ year: 1447, month: 10, start: "2026-03-21" }] };
+    const idulFitri = upcomingIslamicDays(from, cal, 9).find((e) => e.key === "idul-fitri");
+    expect(idulFitri?.date).toBe("2026-03-21");
+  });
+
+  it("hari ini dihitung sebagai 0 hari", () => {
+    const [first] = upcomingIslamicDays(witaToMs("2026-05-27", "08:00"), 0, 1);
+    expect(first).toMatchObject({ key: "idul-adha", daysLeft: 0 });
   });
 });

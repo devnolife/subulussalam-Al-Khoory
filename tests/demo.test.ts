@@ -18,7 +18,7 @@ describe("simulasi data contoh", () => {
     expect(state.settings.qris.image).toBe("/demo-qris.svg");
   });
 
-  it.each(["adzan", "iqamah", "shalat"] as const)("memulai simulasi fase %s", (phase) => {
+  it.each(["adzan", "doa", "iqamah", "shalat"] as const)("memulai simulasi fase %s", (phase) => {
     const state = createDemoState(now, "kajian", phase);
     expect(prayerPhase(now, state.prayer.today, state.settings.prayer, state.settings.manualPrayer).kind).toBe(phase);
   });

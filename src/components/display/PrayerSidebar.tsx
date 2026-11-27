@@ -2,7 +2,7 @@ import { BellRing, CalendarDays, MoonStar } from "lucide-react";
 import { PRAYER_LABELS, type DisplayState } from "@/lib/types";
 import { nextPrayer, previousPrayerAt } from "@/lib/prayer/schedule";
 import { formatClock, formatDuration, formatGregorian } from "@/lib/time";
-import { formatHijri } from "@/lib/hijri";
+import { formatHijri, hijriCalendar } from "@/lib/hijri";
 import { PRAYER_ICONS } from "./prayerIcons";
 import { ProgressRing } from "./ui";
 
@@ -36,7 +36,7 @@ export function PrayerSidebar({ state, now }: { state: DisplayState; now: number
           </p>
           <p className="flex items-center gap-3 text-sky-200/80">
             <MoonStar className="size-6.5 shrink-0 text-gold-400" aria-hidden="true" />
-            {formatHijri(now, state.settings.hijriOffset)}
+            {formatHijri(now, hijriCalendar(state.settings))}
           </p>
         </div>
       </section>

@@ -1,11 +1,19 @@
-import { BellRing, PhoneOff, Rows3, TriangleAlert } from "lucide-react";
+import { BellRing, HandHeart, PhoneOff, Rows3, TriangleAlert } from "lucide-react";
 import type { PrayerPhase } from "@/lib/prayer/schedule";
 import { PRAYER_LABELS } from "@/lib/types";
 import { formatClock, formatDuration } from "@/lib/time";
 import { SunEmblem } from "./SunEmblem";
 import { IconTile, ProgressRing } from "./ui";
 
-/** Layar penuh saat waktu sholat: Adzan → Iqamah → Shalat/Khutbah. */
+const DOA_ADZAN = {
+  arabic:
+    "اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ، وَالصَّلَاةِ الْقَائِمَةِ، آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ، وَابْعَثْهُ مَقَامًا مَحْمُودًا الَّذِي وَعَدْتَهُ",
+  translation:
+    "Ya Allah, Tuhan pemilik seruan yang sempurna ini dan shalat yang akan didirikan, berikanlah kepada Nabi Muhammad al-wasilah dan keutamaan, dan bangkitkanlah beliau pada kedudukan terpuji yang telah Engkau janjikan.",
+  source: "HR. Al-Bukhari",
+};
+
+/** Layar penuh saat waktu sholat: Adzan → doa → Iqamah → Shalat/Khutbah. */
 export function PrayerOverlay({ phase, now }: { phase: Exclude<PrayerPhase, { kind: "normal" }>; now: number }) {
   const name = PRAYER_LABELS[phase.prayer];
 
@@ -51,6 +59,28 @@ export function PrayerOverlay({ phase, now }: { phase: Exclude<PrayerPhase, { ki
         </p>
         <p className="card relative mt-10 rounded-full px-9 py-4 text-[36px] leading-none font-extrabold tabular-nums">
           {formatClock(now)} WITA
+        </p>
+      </div>
+    );
+  }
+
+  if (phase.kind === "doa") {
+    return (
+      <div className="scene absolute inset-0 z-40 flex flex-col items-center justify-center overflow-hidden px-24 text-center">
+        <div className="pattern pattern-fade absolute inset-0" />
+        <p className="relative flex items-center gap-4 text-[28px] font-extrabold tracking-[0.24em] text-gold-400 uppercase">
+          <HandHeart className="size-9" aria-hidden="true" />
+          Doa setelah adzan
+        </p>
+        <p dir="rtl" lang="ar" className="relative mt-10 max-w-[1500px] font-arabic text-[62px] leading-[1.8] text-white">
+          {DOA_ADZAN.arabic}
+        </p>
+        <p className="relative mt-8 max-w-[1400px] text-[30px] leading-snug font-medium text-sky-100/90">
+          &ldquo;{DOA_ADZAN.translation}&rdquo;
+        </p>
+        <p className="relative mt-4 text-[22px] font-bold text-sky-200/70">{DOA_ADZAN.source}</p>
+        <p className="card relative mt-12 rounded-full px-9 py-4 text-[30px] leading-none font-extrabold">
+          Iqamah {name} pukul <span className="tabular-nums">{formatClock(phase.iqamahAt, false)}</span> WITA
         </p>
       </div>
     );

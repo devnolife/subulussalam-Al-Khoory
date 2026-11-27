@@ -24,6 +24,7 @@ const cfg: PrayerConfig = {
   iqamahMin: { subuh: 10, dzuhur: 10, ashar: 10, maghrib: 7, isya: 10 },
   shalatMin: { subuh: 10, dzuhur: 10, ashar: 10, maghrib: 10, isya: 10 },
   adzanSec: 180,
+  doaSec: 0,
   jumatMin: 45,
 };
 
@@ -89,6 +90,33 @@ describe("prayerPhase", () => {
     const manual = { prayer: "ashar" as const, startedAt: at(WED, "09:00") };
     expect(prayerPhase(at(WED, "09:01"), day(WED), cfg, manual)).toMatchObject({ kind: "adzan", prayer: "ashar" });
     expect(prayerPhase(at(WED, "09:30"), day(WED), cfg, manual).kind).toBe("normal");
+  });
+
+  it("layar doa setelah adzan sebelum hitung mundur iqamah", () => {
+    const withDoa = { ...cfg, doaSec: 60 };
+    expect(prayerPhase(at(WED, "11:53", 30), day(WED), withDoa)).toMatchObject({
+      kind: "doa",
+      prayer: "dzuhur",
+      startsAt: at(WED, "11:53"),
+      endsAt: at(WED, "11:54"),
+      iqamahAt: at(WED, "12:00"),
+    });
+    expect(prayerPhase(at(WED, "11:55"), day(WED), withDoa)).toMatchObject({
+      kind: "iqamah",
+      startsAt: at(WED, "11:54"),
+      endsAt: at(WED, "12:00"),
+    });
+  });
+
+  it("iqamah tidak dimulai sebelum doa selesai", () => {
+    const longDoa = { ...cfg, doaSec: 600, iqamahMin: { ...cfg.iqamahMin, maghrib: 5 } };
+    expect(prayerPhase(at(WED, "18:12"), day(WED), longDoa)).toMatchObject({ kind: "doa", iqamahAt: at(WED, "18:18") });
+    expect(prayerPhase(at(WED, "18:18"), day(WED), longDoa)).toMatchObject({ kind: "shalat", endsAt: at(WED, "18:28") });
+  });
+
+  it("Jum'at tidak menampilkan layar doa", () => {
+    const withDoa = { ...cfg, doaSec: 60 };
+    expect(prayerPhase(at(FRI, "11:53", 30), day(FRI), withDoa)).toMatchObject({ kind: "shalat", isJumat: true });
   });
 });
 
