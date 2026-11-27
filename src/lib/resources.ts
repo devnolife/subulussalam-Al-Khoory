@@ -1,10 +1,16 @@
 import { z } from "zod";
 import { query } from "./db";
+import { ZISWAF_KINDS } from "./types";
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal YYYY-MM-DD");
 const optionalDate = z
   .union([dateStr, z.literal(""), z.null()])
   .transform((v) => v || null)
+  .optional();
+/** Id relasi dari <select>: "" atau null berarti kosong. */
+const optionalId = z
+  .union([z.literal(""), z.null(), z.coerce.number().int().positive()])
+  .transform((v) => (typeof v === "number" ? v : null))
   .optional();
 const text = (max = 500) => z.string().trim().max(max);
 
@@ -55,6 +61,23 @@ export const RESOURCES = {
       kind: z.enum(["in", "out"]),
       amount: z.coerce.number().int().positive("Nominal harus lebih dari 0"),
       description: text(200).default(""),
+      categoryId: optionalId,
+      donor: text(120).default(""),
+      showDonor: z.boolean().default(false),
+    }),
+  },
+  finance_categories: {
+    table: "finance_categories",
+    order: "kind, sort, name",
+    schema: z.object({
+      name: text(80).min(1, "Nama kategori wajib diisi"),
+      kind: z.enum(["in", "out"]),
+      ziswaf: z
+        .union([z.enum(ZISWAF_KINDS), z.literal(""), z.null()])
+        .transform((v) => v || null)
+        .optional(),
+      active: z.boolean().default(true),
+      sort: z.coerce.number().int().default(0),
     }),
   },
   verses: {
@@ -163,9 +186,10 @@ export function describeRecord(name: ResourceName, data: Record<string, unknown>
     announcements: s("title") || s("body"),
     kajian: s("title"),
     jumat: [s("date"), s("khatib")].filter(Boolean).join(" · "),
-    finance: [s("date"), data.kind === "out" ? "Pengeluaran" : data.kind === "in" ? "Pemasukan" : "", data.amount != null ? rupiah(data.amount) : "", s("description")]
+    finance: [s("date"), data.kind === "out" ? "Pengeluaran" : data.kind === "in" ? "Pemasukan" : "", data.amount != null ? rupiah(data.amount) : "", s("description") || s("donor")]
       .filter(Boolean)
       .join(" · "),
+    finance_categories: s("name"),
     verses: s("source") || s("translation"),
     slides: s("caption") || s("image"),
     playlist: s("type"),

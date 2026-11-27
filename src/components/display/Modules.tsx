@@ -418,12 +418,47 @@ export function JumatPanel({ state }: P) {
   );
 }
 
+function RecentList({ items }: { items: DisplayState["finance"]["recent"] }) {
+  return (
+    <ul className="mt-2 flex min-h-0 flex-1 flex-col">
+      {items.map((r) => {
+        const isIn = r.kind === "in";
+        return (
+          <li key={r.id} className="flex items-center gap-4 border-b border-white/8 py-3.5 last:border-b-0">
+            <span
+              className={`grid size-12 shrink-0 place-items-center rounded-[16px] ${
+                isIn ? "bg-emerald-400/15 text-emerald-300" : "bg-rose-400/15 text-rose-300"
+              }`}
+            >
+              {isIn ? <ArrowDownLeft className="size-6" aria-hidden="true" /> : <ArrowUpRight className="size-6" aria-hidden="true" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[22px] font-semibold">
+                {r.description || r.category || (isIn ? "Pemasukan" : "Pengeluaran")}
+              </span>
+              <span className="block truncate text-[17px] text-sky-200/65">
+                {[formatDateStr(r.date), r.description ? r.category : null].filter(Boolean).join(" · ")}
+              </span>
+            </span>
+            <span className={`shrink-0 text-[24px] font-extrabold tabular-nums ${isIn ? "text-emerald-300" : "text-rose-300"}`}>
+              {isIn ? "+" : "−"}
+              {rupiah(r.amount).replace("Rp ", "")}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function KasPanel({ state }: P) {
   const f = state.finance;
   const stats = [
     { label: "Pemasukan", value: f.monthIn, icon: TrendingUp, tone: "bg-emerald-400/15 text-emerald-300" },
     { label: "Pengeluaran", value: f.monthOut, icon: TrendingDown, tone: "bg-rose-400/15 text-rose-300" },
   ];
+  const breakdown = f.categories.slice(0, 3);
+  const max = Math.max(1, ...breakdown.map((c) => c.amount));
   return (
     <div className="flex size-full flex-col p-10">
       <PanelHeader icon={Wallet} title="Laporan kas masjid" meta={f.monthLabel} />
@@ -452,39 +487,43 @@ export function KasPanel({ state }: P) {
             </div>
           ))}
         </div>
-        <div className="tile rise flex min-h-0 flex-col rounded-[28px] px-7 py-6" style={delay(2)}>
-          <p className="text-[20px] font-extrabold text-sky-200/85">Transaksi terakhir</p>
-          <ul className="mt-2 flex min-h-0 flex-1 flex-col">
-            {f.recent.slice(0, 5).map((r) => {
-              const isIn = r.kind === "in";
-              return (
-                <li key={r.id} className="flex items-center gap-4 border-b border-white/8 py-3.5 last:border-b-0">
-                  <span
-                    className={`grid size-12 shrink-0 place-items-center rounded-[16px] ${
-                      isIn ? "bg-emerald-400/15 text-emerald-300" : "bg-rose-400/15 text-rose-300"
-                    }`}
-                  >
-                    {isIn ? (
-                      <ArrowDownLeft className="size-6" aria-hidden="true" />
-                    ) : (
-                      <ArrowUpRight className="size-6" aria-hidden="true" />
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[22px] font-semibold">
-                      {r.description || (isIn ? "Pemasukan" : "Pengeluaran")}
+        {breakdown.length ? (
+          <div className="flex min-h-0 flex-col gap-4">
+            <div className="tile rise rounded-[28px] px-7 py-5" style={delay(2)}>
+              <p className="text-[20px] font-extrabold text-sky-200/85">Rincian bulan ini</p>
+              <ul className="mt-3 space-y-3">
+                {breakdown.map((c) => (
+                  <li key={`${c.kind}:${c.name}`}>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <span className="truncate text-[21px] font-semibold">{c.name}</span>
+                      <span
+                        className={`shrink-0 text-[22px] font-extrabold tabular-nums ${c.kind === "in" ? "text-emerald-300" : "text-rose-300"}`}
+                      >
+                        {c.kind === "in" ? "+" : "−"}
+                        {rupiah(c.amount).replace("Rp ", "")}
+                      </span>
+                    </div>
+                    <span className="mt-1.5 block h-2 overflow-hidden rounded-full bg-white/8">
+                      <span
+                        className={`block h-full rounded-full ${c.kind === "in" ? "bg-emerald-400/70" : "bg-rose-400/70"}`}
+                        style={{ width: `${Math.max(4, (c.amount / max) * 100)}%` }}
+                      />
                     </span>
-                    <span className="block text-[17px] text-sky-200/65">{formatDateStr(r.date)}</span>
-                  </span>
-                  <span className={`shrink-0 text-[24px] font-extrabold tabular-nums ${isIn ? "text-emerald-300" : "text-rose-300"}`}>
-                    {isIn ? "+" : "−"}
-                    {rupiah(r.amount).replace("Rp ", "")}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="tile rise flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] px-7 pt-5 pb-2" style={delay(3)}>
+              <p className="text-[20px] font-extrabold text-sky-200/85">Transaksi terakhir</p>
+              <RecentList items={f.recent.slice(0, 2)} />
+            </div>
+          </div>
+        ) : (
+          <div className="tile rise flex min-h-0 flex-col rounded-[28px] px-7 py-6" style={delay(2)}>
+            <p className="text-[20px] font-extrabold text-sky-200/85">Transaksi terakhir</p>
+            <RecentList items={f.recent.slice(0, 5)} />
+          </div>
+        )}
       </div>
     </div>
   );

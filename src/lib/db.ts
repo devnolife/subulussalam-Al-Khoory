@@ -36,6 +36,14 @@ CREATE TABLE IF NOT EXISTS audit_log (
   id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(), user_id INT REFERENCES users(id) ON DELETE SET NULL,
   username TEXT NOT NULL DEFAULT '', action TEXT NOT NULL, target TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '');
 CREATE INDEX IF NOT EXISTS audit_log_at_idx ON audit_log (at DESC);
+CREATE TABLE IF NOT EXISTS finance_categories (
+  id SERIAL PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL CHECK (kind IN ('in','out')),
+  ziswaf TEXT CHECK (ziswaf IN ('zakat','infaq','sedekah','wakaf')), active BOOLEAN NOT NULL DEFAULT TRUE,
+  sort INT NOT NULL DEFAULT 0);
+ALTER TABLE finance ADD COLUMN IF NOT EXISTS category_id INT REFERENCES finance_categories(id) ON DELETE SET NULL;
+ALTER TABLE finance ADD COLUMN IF NOT EXISTS donor TEXT NOT NULL DEFAULT '';
+ALTER TABLE finance ADD COLUMN IF NOT EXISTS show_donor BOOLEAN NOT NULL DEFAULT FALSE;
+CREATE INDEX IF NOT EXISTS finance_date_idx ON finance (date DESC, id DESC);
 `;
 
 const SEED_PLAYLIST: [string, number][] = [
@@ -48,6 +56,27 @@ const SEED_PLAYLIST: [string, number][] = [
   ["qris", 15],
   ["pengumuman", 15],
   ["haribesar", 15],
+  ["donatur", 15],
+];
+
+/** Kategori awal; pengurus bisa mengubah, menonaktifkan, atau menambah sendiri. */
+const SEED_CATEGORIES: [string, "in" | "out", string | null][] = [
+  ["Kotak amal Jumat", "in", "infaq"],
+  ["Infaq umum", "in", "infaq"],
+  ["Sedekah", "in", "sedekah"],
+  ["Zakat mal", "in", "zakat"],
+  ["Zakat fitrah", "in", "zakat"],
+  ["Wakaf", "in", "wakaf"],
+  ["Donasi kegiatan", "in", null],
+  ["Pemasukan lain", "in", null],
+  ["Listrik, air & internet", "out", null],
+  ["Kebersihan & perawatan", "out", null],
+  ["Kegiatan dakwah", "out", null],
+  ["Honor petugas", "out", null],
+  ["Penyaluran zakat", "out", "zakat"],
+  ["Santunan & sedekah", "out", "sedekah"],
+  ["Pembangunan (wakaf)", "out", "wakaf"],
+  ["Pengeluaran lain", "out", null],
 ];
 
 const SEED_VERSES: [string, string, string][] = [
@@ -104,6 +133,17 @@ async function init(): Promise<void> {
     for (const [arabic, translation, source] of SEED_VERSES) {
       await p.query("INSERT INTO verses (arabic, translation, source) VALUES ($1,$2,$3)", [arabic, translation, source]);
     }
+  }
+  // Kategori awal dibuat sekali saja; bila pengurus menghapus semuanya, tidak dibuat ulang.
+  const seeded = await p.query("SELECT 1 FROM settings WHERE key = 'seed:financeCategories'");
+  if (!seeded.rowCount) {
+    const categories = await p.query("SELECT 1 FROM finance_categories LIMIT 1");
+    if (!categories.rowCount) {
+      for (const [i, [name, kind, ziswaf]] of SEED_CATEGORIES.entries()) {
+        await p.query("INSERT INTO finance_categories (name, kind, ziswaf, sort) VALUES ($1,$2,$3,$4)", [name, kind, ziswaf, i]);
+      }
+    }
+    await p.query("INSERT INTO settings (key, value) VALUES ('seed:financeCategories', 'true') ON CONFLICT (key) DO NOTHING");
   }
   const existingUser = await p.query("SELECT 1 FROM users LIMIT 1");
   if (!existingUser.rowCount) {

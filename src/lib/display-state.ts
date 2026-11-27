@@ -1,42 +1,12 @@
-import { query } from "./db";
 import { listResource } from "./resources";
 import { getSettings } from "./settings";
 import { getTodayTomorrow } from "./prayer/service";
 import { applyCorrections } from "./prayer/schedule";
 import { getWeather } from "./weather";
 import { contentVersion } from "./realtime";
-import { monthLabel, witaDateStr } from "./time";
-import type {
-  Announcement,
-  DisplayState,
-  FinanceEntry,
-  FinanceSummary,
-  Jumat,
-  Kajian,
-  PlaylistItem,
-  Slide,
-  Verse,
-} from "./types";
-
-async function financeSummary(today: string): Promise<FinanceSummary> {
-  const month = today.slice(0, 7);
-  const [totals] = await query<{ balance: string; month_in: string; month_out: string }>(
-    `SELECT
-       COALESCE(SUM(CASE WHEN kind='in' THEN amount ELSE -amount END),0) AS balance,
-       COALESCE(SUM(amount) FILTER (WHERE kind='in' AND to_char(date,'YYYY-MM')=$1),0) AS month_in,
-       COALESCE(SUM(amount) FILTER (WHERE kind='out' AND to_char(date,'YYYY-MM')=$1),0) AS month_out
-     FROM finance`,
-    [month],
-  );
-  const recent = (await listResource<FinanceEntry>("finance")).slice(0, 6);
-  return {
-    balance: Number(totals.balance),
-    monthIn: Number(totals.month_in),
-    monthOut: Number(totals.month_out),
-    monthLabel: monthLabel(today),
-    recent,
-  };
-}
+import { getFinanceSummary } from "./finance";
+import { witaDateStr } from "./time";
+import type { Announcement, DisplayState, Jumat, Kajian, PlaylistItem, Slide, Verse } from "./types";
 
 /** Ayat/hadits berganti harian, deterministik berdasarkan tanggal. */
 function verseOfDay(verses: Verse[], today: string): Verse | null {
@@ -56,7 +26,7 @@ export async function getDisplayState(): Promise<DisplayState> {
     listResource<Jumat>("jumat", `WHERE date >= '${today}'::date`),
     listResource<Verse>("verses", "WHERE active"),
     listResource<Slide>("slides", "WHERE active"),
-    financeSummary(today),
+    getFinanceSummary(today),
     getTodayTomorrow(today, settings.location.kemenagCityId, settings.location.lat, settings.location.lng),
     getWeather(settings.location.lat, settings.location.lng),
   ]);

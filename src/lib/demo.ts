@@ -48,9 +48,29 @@ export function createDemoState(now: number, module: string | null, phase: strin
     finance: {
       balance: 12500000, monthIn: 5000000, monthOut: 2000000,
       monthLabel: "Contoh bulan ini",
+      year: witaParts(now).year,
       recent: [
-        { id: 1, date: today, kind: "in", amount: 1000000, description: "Infaq (contoh)" },
-        { id: 2, date: today, kind: "out", amount: 500000, description: "Kebersihan (contoh)" },
+        { id: 1, date: today, kind: "in", amount: 1000000, description: "Infaq Jumat (contoh)", category: "Kotak amal Jumat" },
+        { id: 2, date: today, kind: "out", amount: 500000, description: "Kebersihan (contoh)", category: "Kebersihan" },
+        { id: 3, date: addDays(today, -2), kind: "in", amount: 750000, description: "", category: "Zakat mal" },
+      ],
+      categories: [
+        { name: "Kotak amal Jumat", kind: "in", amount: 2500000 },
+        { name: "Zakat mal", kind: "in", amount: 1500000 },
+        { name: "Listrik & air", kind: "out", amount: 1200000 },
+        { name: "Kebersihan", kind: "out", amount: 800000 },
+      ],
+      donors: [
+        { id: 3, date: addDays(today, -2), name: "Bapak Fulan (contoh)", amount: 750000, category: "Zakat mal" },
+        { id: 4, date: addDays(today, -3), name: "Hamba Allah", amount: 500000, category: "Infaq pembangunan" },
+        { id: 5, date: addDays(today, -6), name: "Ibu Fulanah (contoh)", amount: 250000, category: "Sedekah" },
+      ],
+      monthDonors: 3,
+      ziswaf: [
+        { kind: "zakat", monthIn: 1500000, monthOut: 1000000, yearIn: 9000000, yearOut: 7500000 },
+        { kind: "infaq", monthIn: 3000000, monthOut: 0, yearIn: 21000000, yearOut: 4000000 },
+        { kind: "sedekah", monthIn: 250000, monthOut: 0, yearIn: 3100000, yearOut: 1500000 },
+        { kind: "wakaf", monthIn: 0, monthOut: 0, yearIn: 5000000, yearOut: 0 },
       ],
     },
     verse: { id: 1, arabic: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", translation: "Maka sesungguhnya bersama kesulitan ada kemudahan.", source: "QS. Al-Insyirah: 5", active: true },

@@ -5,6 +5,7 @@ import type { DisplayState, ModuleType, PlaylistItem } from "@/lib/types";
 import { activeItems, contentAvailability } from "@/lib/playlist";
 import { SunEmblem } from "./SunEmblem";
 import { HariBesarPanel } from "./HariBesarPanel";
+import { DonaturPanel } from "./DonaturPanel";
 import {
   AyatPanel,
   JumatPanel,
@@ -40,6 +41,8 @@ function renderModule(type: ModuleType, state: DisplayState, item: PlaylistItem,
       return <PengumumanPanel state={state} />;
     case "haribesar":
       return <HariBesarPanel state={state} now={now} />;
+    case "donatur":
+      return <DonaturPanel state={state} />;
   }
 }
 

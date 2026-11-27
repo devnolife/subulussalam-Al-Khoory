@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { api } from "@/components/admin/api";
 import { Button, Card, PageHeader, Select, TextArea } from "@/components/admin/ui";
 import { DisplayPreview } from "@/components/admin/DisplayPreview";
+import { SummaryCards } from "@/components/admin/SummaryCards";
 import { IconTile } from "@/components/display/ui";
 import { FARDH_KEYS, MODULE_LABELS, MODULE_TYPES, PRAYER_LABELS, type Settings } from "@/lib/types";
 
@@ -99,6 +100,8 @@ export default function RemotePage() {
           </Link>
         </div>
       </div>
+
+      <SummaryCards />
 
       <Card className="space-y-3">
         <h2 className="flex items-center gap-3 font-bold">

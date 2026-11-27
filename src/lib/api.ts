@@ -20,6 +20,8 @@ export async function authorize(permission: Permission | null): Promise<SessionU
 
 export function handleError(e: unknown) {
   if (e instanceof ZodError) return jsonError(e.issues.map((i) => i.message).join(", "), 422);
+  // Relasi (mis. kategori kas) yang dirujuk sudah tidak ada.
+  if ((e as { code?: string })?.code === "23503") return jsonError("Data terkait tidak ditemukan, muat ulang halaman", 422);
   console.error(e);
   return jsonError("Terjadi kesalahan pada server", 500);
 }

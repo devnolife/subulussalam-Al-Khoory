@@ -11,6 +11,7 @@ const RESOURCE_LABELS: Record<string, string> = {
   kajian: "jadwal kajian",
   jumat: "petugas Jumat",
   finance: "transaksi kas",
+  finance_categories: "kategori kas",
   verses: "ayat/hadis",
   slides: "poster",
   playlist: "urutan tampilan",

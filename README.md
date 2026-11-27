@@ -19,7 +19,7 @@ Buka `http://localhost:3000/display` untuk TV dan `http://localhost:3000/admin` 
 
 Untuk pengembangan atau preview Vercel, atur `DEMO_MODE=1` di `.env.local` atau di environment variables project Vercel, lalu jalankan/deploy aplikasi dan buka `/demo`. Tidak perlu mengatur `DATABASE_URL` atau password admin untuk simulasi ini.
 
-Pilih panel dan kondisi layar pada halaman tersebut untuk melihat contoh kegiatan hari ini dan penceramah, petugas Jumat, poster, kas, ayat, donasi, hari besar Islam, pengumuman, azan, doa setelah azan, iqamah, sholat, serta pengumuman darurat. API contoh tersedia di `/api/display/state?demo=1`, dan menerima pilihan `module` serta `phase` seperti yang digunakan halaman simulasi.
+Pilih panel dan kondisi layar pada halaman tersebut untuk melihat contoh kegiatan hari ini dan penceramah, petugas Jumat, poster, kas, donatur dan ZISWAF, ayat, donasi, hari besar Islam, pengumuman, azan, doa setelah azan, iqamah, sholat, serta pengumuman darurat. API contoh tersedia di `/api/display/state?demo=1`, dan menerima pilihan `module` serta `phase` seperti yang digunakan halaman simulasi.
 
 Semua data hanya contoh; QRIS tidak bisa dipindai, cuaca bukan data aktual, dan jadwal sholat hanya perkiraan. Panel Live Ka'bah memutar siaran YouTube asli. Simulasi hanya pratinjau: panel admin, upload, dan realtime antarperangkat tetap memerlukan layanan operasional dan tidak disimulasikan. `/admin` dan `/display` biasa tetap memerlukan database; simulasi tidak menulis ke sana. Jangan mengaktifkan `DEMO_MODE` pada deployment operasional.
 
@@ -49,13 +49,23 @@ Admin menambah pengurus lain di Pengaturan › **Pengguna**, lalu memilih perann
 | Peran | Akses |
 | --- | --- |
 | Admin | Semua menu, pengaturan masjid, pengguna, dan riwayat aktivitas |
-| Bendahara | Kas dan infak |
+| Bendahara | Kas dan infak, kategori kas, dan donatur |
 | Konten | Konten layar (pengumuman, kajian, Jumat, ayat, slide), urutan tampilan, upload gambar, dan remote TV |
 | Operator TV | Remote TV dan urutan tampilan |
 
 Di halaman Pengguna, admin juga bisa mengubah peran, mereset password, dan menonaktifkan akun; akun yang dinonaktifkan atau direset langsung keluar dari semua perangkat. Akun tidak dihapus agar riwayat tetap utuh. Admin tidak bisa menonaktifkan akunnya sendiri, dan admin aktif terakhir tidak bisa diturunkan perannya atau dinonaktifkan. Setelah 5 kali salah password untuk satu nama pengguna (atau 20 kali dari satu alamat), login dikunci 5 menit.
 
 Pengaturan › **Riwayat aktivitas** (khusus admin) mencatat siapa yang login, keluar, menambah, mengubah, atau menghapus konten dan kas, mengubah pengaturan, mengelola pengguna, serta mengirim perintah remote. Riwayat disimpan satu tahun.
+
+Beranda Remote menampilkan kartu ringkasan sesuai peran: saldo kas, pemasukan dan pengeluaran bulan ini, dan jumlah donatur bulan ini (admin), serta jumlah pengumuman, kajian, dan slide aktif dan petugas Jumat berikutnya (admin dan konten). Bendahara melihat ringkasan kas di bagian atas halaman Kas.
+
+## Kas, donatur, dan ZISWAF
+
+- Tiap transaksi kas bisa diberi **kategori**. Kategori dikelola di Kas › **Kategori kas & ZISWAF** dan dipisah untuk pemasukan dan pengeluaran. Saat pertama kali berjalan, aplikasi membuat sekali daftar kategori umum yang bisa diubah atau dinonaktifkan. Nonaktifkan kategori yang tidak dipakai lagi; menghapusnya membuat transaksi lama menjadi tanpa kategori.
+- Kategori bisa ditandai **zakat, infaq, sedekah, atau wakaf**. Pemasukan pada kategori itu dihitung sebagai penerimaan, pengeluaran sebagai penyaluran.
+- Pemasukan bisa mencatat **nama donatur**. Nama hanya tampil di layar TV bila "Tampilkan nama di layar" diaktifkan; jika tidak, layar menulis "Hamba Allah". Nama yang disembunyikan tidak dikirim ke layar.
+- Panel **Laporan kas** menampilkan saldo, pemasukan dan pengeluaran bulan ini, rincian kategori terbesar bulan ini (bila ada transaksi berkategori), dan transaksi terakhir.
+- Panel **Donatur & ZISWAF** menampilkan donatur 60 hari terakhir (paling banyak 8) dan rekap penerimaan serta penyaluran ZISWAF bulan dan tahun ini. Panel ini dilewati bila belum ada donatur maupun transaksi ZISWAF tahun ini. Atur urutan dan durasinya di menu Tampilan.
 
 ## Cadangan
 

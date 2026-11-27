@@ -38,5 +38,6 @@ export function contentAvailability(state: DisplayState): Record<ModuleType, boo
     pengumuman: state.announcements.some((a) => a.showPanel),
     // Selalu ada hari besar berikutnya yang bisa dihitung mundur.
     haribesar: true,
+    donatur: state.finance.donors.length > 0 || state.finance.ziswaf.some((z) => z.yearIn > 0 || z.yearOut > 0),
   };
 }

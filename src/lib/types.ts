@@ -17,7 +17,7 @@ export const PRAYER_LABELS: Record<PrayerKey, string> = {
 export type PrayerTimes = Record<PrayerKey, string>;
 export type DayTimes = { date: string; times: PrayerTimes; source: "kemenag" | "offline" };
 
-export const MODULE_TYPES = ["kabah", "slides", "kajian", "jumat", "kas", "ayat", "qris", "pengumuman", "haribesar"] as const;
+export const MODULE_TYPES = ["kabah", "slides", "kajian", "jumat", "kas", "ayat", "qris", "pengumuman", "haribesar", "donatur"] as const;
 export type ModuleType = (typeof MODULE_TYPES)[number];
 export const MODULE_LABELS: Record<ModuleType, string> = {
   kabah: "Live Ka'bah",
@@ -29,6 +29,7 @@ export const MODULE_LABELS: Record<ModuleType, string> = {
   qris: "QRIS Donasi",
   pengumuman: "Pengumuman",
   haribesar: "Hari Besar Islam",
+  donatur: "Donatur & ZISWAF",
 };
 
 export type PlaylistItem = {
@@ -71,12 +72,35 @@ export type Jumat = {
   theme: string;
 };
 
+export const ZISWAF_KINDS = ["zakat", "infaq", "sedekah", "wakaf"] as const;
+export type ZiswafKind = (typeof ZISWAF_KINDS)[number];
+export const ZISWAF_LABELS: Record<ZiswafKind, string> = {
+  zakat: "Zakat",
+  infaq: "Infaq",
+  sedekah: "Sedekah",
+  wakaf: "Wakaf",
+};
+
+export type FinanceCategory = {
+  id: number;
+  name: string;
+  kind: "in" | "out";
+  ziswaf: ZiswafKind | null;
+  active: boolean;
+  sort: number;
+};
+
 export type FinanceEntry = {
   id: number;
   date: string;
   kind: "in" | "out";
   amount: number;
   description: string;
+  categoryId: number | null;
+  /** Nama donatur (opsional, hanya pemasukan). */
+  donor: string;
+  /** false = tampil sebagai "Hamba Allah" di layar. */
+  showDonor: boolean;
 };
 
 export type Verse = {
@@ -121,15 +145,45 @@ export type Settings = {
   manualPrayer: { prayer: FardhKey | null; startedAt: number | null };
 };
 
+/** Transaksi untuk layar publik: tanpa nama donatur. */
+export type FinanceRecent = {
+  id: number;
+  date: string;
+  kind: "in" | "out";
+  amount: number;
+  description: string;
+  category: string | null;
+};
+
 export type FinanceSummary = {
   balance: number;
   monthIn: number;
   monthOut: number;
   monthLabel: string;
-  recent: FinanceEntry[];
+  year: number;
+  recent: FinanceRecent[];
+  /** Total per kategori bulan ini, terbesar dulu. */
+  categories: { name: string; kind: "in" | "out"; amount: number }[];
+  /** Donatur terbaru (60 hari terakhir); nama yang tidak boleh tampil sudah diganti "Hamba Allah". */
+  donors: { id: number; date: string; name: string; amount: number; category: string | null }[];
+  /** Jumlah donatur berbeda (menurut nama yang dicatat) pada pemasukan bulan ini. */
+  monthDonors: number;
+  /** Penerimaan (pemasukan) dan penyaluran (pengeluaran) per jenis ZISWAF. */
+  ziswaf: { kind: ZiswafKind; monthIn: number; monthOut: number; yearIn: number; yearOut: number }[];
 };
 
 export type Weather = { temperature: number; code: number; label: string; updatedAt: number } | null;
+
+/** Kartu ringkasan di beranda panel; bagian tanpa izin tidak dikirim. */
+export type AdminSummary = {
+  finance?: Pick<FinanceSummary, "balance" | "monthIn" | "monthOut" | "monthLabel" | "monthDonors">;
+  content?: {
+    announcements: number;
+    kajian: number;
+    slides: number;
+    nextJumat: { date: string; khatib: string } | null;
+  };
+};
 
 export type DisplayState = {
   demo?: { phase: "normal" | "adzan" | "doa" | "iqamah" | "shalat" | "emergency" };

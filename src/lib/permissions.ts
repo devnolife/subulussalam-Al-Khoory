@@ -38,6 +38,7 @@ export const RESOURCE_PERMISSION: Record<string, Permission> = {
   verses: "content",
   slides: "content",
   finance: "finance",
+  finance_categories: "finance",
   playlist: "playlist",
 };
 
