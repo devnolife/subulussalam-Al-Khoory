@@ -203,7 +203,7 @@ export default function ImporKasPage() {
             </ul>
           )}
           <div className="grid gap-2">
-            <Link href="/admin/kas" className="card-brand inline-flex min-h-12 items-center justify-center rounded-2xl px-5 text-sm font-bold">
+            <Link href="/admin/kas" className="bg-royal-600 hover:bg-royal-500 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 text-sm font-bold">
               Lihat buku kas
             </Link>
             <Button variant="ghost" onClick={reset}>

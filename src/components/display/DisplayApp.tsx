@@ -19,7 +19,7 @@ export function DisplayApp() {
     return (
       <Stage>
         <div className="scene flex size-full flex-col items-center justify-center">
-          <span className="card-brand grid size-40 animate-soft-pulse place-items-center rounded-[48px] text-white">
+          <span className="grid size-40 bg-royal-600 animate-soft-pulse place-items-center rounded-[48px] text-white">
             <SunEmblem className="size-24" />
           </span>
           <p className="mt-10 text-[34px] font-semibold text-sky-200">

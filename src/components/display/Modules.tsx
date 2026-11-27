@@ -277,14 +277,13 @@ export function KajianPanel({ state, now }: P & { now: number }) {
           className="card-brand rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8"
           style={delay(1)}
         >
-          {featured.banner ? (
+          {featured.banner && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={featured.banner} alt="" className="absolute inset-0 size-full object-cover opacity-40" />
-              <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/70 to-navy-950/30" />
+              {/* Peredup foto agar teks di atasnya tetap terbaca. */}
+              <div className="absolute inset-0 bg-linear-to-t from-navy-950 via-navy-950/70 to-navy-950/30" />
             </>
-          ) : (
-            <div className="pattern pattern-fade absolute inset-0" />
           )}
           <div className="relative">
             <div className="flex flex-wrap gap-2.5">
@@ -421,7 +420,6 @@ export function JumatPanel({ state }: P) {
             className="card-brand rise relative flex flex-1 flex-col items-center justify-center overflow-hidden rounded-[28px] text-center"
             style={delay(1)}
           >
-            <div className="pattern pattern-fade absolute inset-0" />
             <p className="relative text-[20px] font-extrabold tracking-[0.24em] text-gold-400 uppercase">Jumat</p>
             <p className="relative mt-1 text-[128px] leading-none font-extrabold tracking-[-0.05em] tabular-nums">
               {Number(next.date.slice(8, 10))}
@@ -508,14 +506,13 @@ export function KasPanel({ state }: P) {
   const max = Math.max(1, ...breakdown.map((c) => c.amount));
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={Wallet} title="Laporan kas masjid" meta={f.monthLabel} />
+      <PanelHeader icon={Wallet} title="Laporan kas masjid" meta={f.monthLabel} tone="zamrud" />
       <div className="grid min-h-0 flex-1 grid-cols-[1.05fr_1fr] gap-5">
         <div className="flex min-h-0 flex-col gap-4">
           <div
-            className="card-brand rise relative flex flex-1 flex-col justify-between overflow-hidden rounded-[28px] p-8"
+            className="card-zamrud rise relative flex flex-1 flex-col justify-between overflow-hidden rounded-[28px] p-8"
             style={delay(1)}
           >
-            <div className="pattern pattern-fade absolute inset-0" />
             <p className="relative flex items-center gap-3 text-[22px] font-bold text-sky-100">
               <Landmark className="size-7 text-gold-400" aria-hidden="true" />
               Saldo kas saat ini
@@ -591,9 +588,9 @@ export function AyatPanel({ state }: P) {
         {v.arabic}
       </p>
       <div className="rise my-7 flex items-center gap-4 text-gold-400" style={delay(2)} aria-hidden="true">
-        <span className="h-0.5 w-28 rounded-full bg-linear-to-r from-transparent to-current" />
+        <span className="h-0.5 w-20 rounded-full bg-current opacity-40" />
         <StarOrnament className="size-6" />
-        <span className="h-0.5 w-28 rounded-full bg-linear-to-l from-transparent to-current" />
+        <span className="h-0.5 w-20 rounded-full bg-current opacity-40" />
       </div>
       <p className={`rise max-w-[1000px] leading-snug font-medium text-sky-100/90 ${translationSize}`} style={delay(3)}>
         &ldquo;{v.translation}&rdquo;
@@ -651,7 +648,6 @@ export function QrisPanel({ state }: P) {
         )}
         {q.accountNo && (
           <div className="card-brand rise relative mt-6 overflow-hidden rounded-[26px] px-7 py-6" style={delay(5)}>
-            <div className="pattern pattern-fade absolute inset-0" />
             <div className="relative flex items-center justify-between gap-4">
               <p className="text-[22px] font-extrabold">{q.bankName || "Rekening masjid"}</p>
               <Landmark className="size-8 text-gold-400" aria-hidden="true" />
@@ -671,13 +667,12 @@ export function PengumumanPanel({ state }: P) {
   if (!first) return null;
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={Megaphone} title="Pengumuman" meta={`${items.length} informasi`} />
+      <PanelHeader icon={Megaphone} title="Pengumuman" meta={`${items.length} informasi`} tone="bata" />
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <article
-          className="card-brand rise relative flex min-h-0 flex-[1.5] flex-col justify-center overflow-hidden rounded-[28px] px-9 py-7"
+          className="card-bata rise relative flex min-h-0 flex-[1.5] flex-col justify-center overflow-hidden rounded-[28px] px-9 py-7"
           style={delay(1)}
         >
-          <div className="pattern pattern-fade absolute inset-0" />
           {first.title && (
             <p className="relative flex items-center gap-3 text-[24px] font-extrabold text-gold-400">
               <StarOrnament className="size-5" />

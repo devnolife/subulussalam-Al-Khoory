@@ -39,7 +39,7 @@ export function AdminNav() {
   const items = NAV.filter((n) => n.show(role));
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <ul className={`card mx-auto grid max-w-lg ${COLS[items.length - 1]} rounded-[24px] bg-navy-900/90 p-1.5 backdrop-blur-xl`}>
+      <ul className={`card mx-auto grid max-w-lg ${COLS[items.length - 1]} rounded-[24px] bg-navy-900 p-1.5`}>
         {items.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (
@@ -48,7 +48,7 @@ export function AdminNav() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={`flex flex-col items-center gap-1 rounded-[18px] py-2 text-[11px] font-bold transition-colors ${
-                  active ? "card-brand text-white" : "text-white/55 hover:text-white"
+                  active ? "bg-royal-600 text-white" : "text-white/55 hover:text-white"
                 }`}
               >
                 <Icon className={`size-5.5 ${active ? "text-gold-400" : ""}`} strokeWidth={2} aria-hidden="true" />

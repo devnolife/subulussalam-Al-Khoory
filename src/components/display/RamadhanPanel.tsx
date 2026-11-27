@@ -35,8 +35,7 @@ function FastingCard({ fasting, now }: { fasting: FastingDay; now: number }) {
   const left = witaToMs(fasting.date, fasting.maghrib) - now;
   const today = fasting.when === "today";
   return (
-    <article className="card-brand rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8" style={delay(1)}>
-      <div className="pattern pattern-fade absolute inset-0" />
+    <article className="card-ungu rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8" style={delay(1)}>
       <div className="relative">
         <Chip icon={MoonStar} tone="gold">
           {today ? `Puasa hari ke-${fasting.day}` : `Besok puasa hari ke-${fasting.day}`}
@@ -48,7 +47,7 @@ function FastingCard({ fasting, now }: { fasting: FastingDay; now: number }) {
           { label: "Imsak", value: fasting.imsak, icon: Sunrise, accent: "" },
           { label: "Berbuka", value: fasting.maghrib, icon: Sunset, accent: "text-gold-400" },
         ].map(({ label, value, icon: Icon, accent }) => (
-          <div key={label} className="rounded-[24px] bg-white/10 px-6 py-5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]">
+          <div key={label} className="rounded-[24px] bg-white/10 px-6 py-5">
             <p className="flex items-center gap-2.5 text-[18px] font-extrabold tracking-[0.14em] text-sky-200/80 uppercase">
               <Icon className="size-6" aria-hidden="true" />
               {label}
@@ -119,7 +118,7 @@ function TarawihCard({ t, step, variant }: { t: NightTarawih<DisplayTarawih>; st
   return (
     <div
       className={`rise flex min-h-0 flex-col overflow-hidden rounded-[28px] ${
-        compact ? "tile flex-auto justify-center gap-2.5 px-7 py-6" : "card-brand relative justify-center gap-4 p-8"
+        compact ? "tile flex-auto justify-center gap-2.5 px-7 py-6" : "card-ungu relative justify-center gap-4 p-8"
       }`}
       style={delay(step)}
     >
@@ -186,8 +185,7 @@ function IedCompact({ ied, step }: { ied: IedInfo; step: number }) {
 function IedCard({ ied, step, variant }: { ied: IedInfo; step: number; variant: Variant }) {
   if (variant === "compact") return <IedCompact ied={ied} step={step} />;
   return (
-    <div className="card-brand rise relative flex min-h-0 flex-col justify-between gap-4 overflow-hidden rounded-[28px] p-8" style={delay(step)}>
-      <div className="pattern pattern-fade absolute inset-0" />
+    <div className="card-ungu rise relative flex min-h-0 flex-col justify-between gap-4 overflow-hidden rounded-[28px] p-8" style={delay(step)}>
       <div className="relative">
         <Chip icon={Sparkles} tone="gold">
           {countdown(ied.daysLeft)}
@@ -287,7 +285,7 @@ export function RamadhanPanel({ view, now }: { view: RamadhanView<DisplayTarawih
 
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={MoonStar} title={title} meta={meta} />
+      <PanelHeader icon={MoonStar} title={title} meta={meta} tone="ungu" />
       <div className={`grid min-h-0 flex-1 gap-5 ${wide ? "grid-cols-1" : "grid-cols-[1fr_1.05fr]"}`}>
         {render(main, 1, wide ? "wide" : "large")}
         {!wide && <div className="flex min-h-0 flex-col gap-5">{side.map((block, i) => render(block, i + 2, "compact"))}</div>}

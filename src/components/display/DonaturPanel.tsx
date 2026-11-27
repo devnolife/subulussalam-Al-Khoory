@@ -22,8 +22,7 @@ function compact(n: number): string {
 
 function DonorList({ donors, wide }: { donors: DisplayState["finance"]["donors"]; wide: boolean }) {
   return (
-    <div className="card-brand rise relative flex min-h-0 flex-col overflow-hidden rounded-[28px] px-8 pt-7 pb-3" style={delay(1)}>
-      <div className="pattern pattern-fade absolute inset-0" />
+    <div className="card-zamrud rise relative flex min-h-0 flex-col overflow-hidden rounded-[28px] px-8 pt-7 pb-3" style={delay(1)}>
       <p className="relative flex items-center gap-3 text-[24px] font-extrabold text-gold-400">
         <HeartHandshake className="size-7" aria-hidden="true" />
         Jazakumullahu khairan
@@ -38,7 +37,7 @@ function DonorList({ donors, wide }: { donors: DisplayState["finance"]["donors"]
                 {[formatDateStr(d.date), d.category].filter(Boolean).join(" · ")}
               </span>
             </span>
-            <span className="shrink-0 text-[26px] font-extrabold text-emerald-300 tabular-nums">{short(d.amount)}</span>
+            <span className="shrink-0 text-[26px] font-extrabold text-gold-300 tabular-nums">{short(d.amount)}</span>
           </li>
         ))}
       </ul>
@@ -82,7 +81,7 @@ export function DonaturPanel({ state }: { state: DisplayState }) {
 
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={HandHeart} title="Donatur & ZISWAF" meta={meta} />
+      <PanelHeader icon={HandHeart} title="Donatur & ZISWAF" meta={meta} tone="zamrud" />
       {hasDonors && hasZiswaf ? (
         <div className="grid min-h-0 flex-1 grid-cols-[1fr_1.15fr] gap-5">
           <DonorList donors={f.donors} wide={false} />

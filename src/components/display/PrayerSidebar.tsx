@@ -45,7 +45,6 @@ export function PrayerSidebar({ state, now }: { state: DisplayState; now: number
         aria-label="Waktu sholat berikutnya"
         className={`relative flex flex-1 flex-col justify-between overflow-hidden rounded-[32px] p-8 ${soon ? "card-gold" : "card-brand"}`}
       >
-        <div className="pattern pattern-fade absolute inset-0" />
         <div className="relative flex items-center gap-6">
           <ProgressRing
             size={140}

@@ -89,7 +89,7 @@ export function DemoControls() {
           <Segmented label="Kondisi layar" options={PHASES} value={phase} onChange={setPhase} />
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-[28px] bg-black shadow-[0_40px_80px_-40px_rgb(29_28_229/0.6)] ring-1 ring-white/10">
+        <div className="mt-6 overflow-hidden rounded-[28px] bg-black ring-1 ring-white/10">
           <iframe
             title="Pratinjau layar informasi simulasi"
             src={url}

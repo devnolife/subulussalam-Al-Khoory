@@ -24,13 +24,13 @@ export default async function Home() {
   return (
     <main className="scene flex min-h-dvh items-center justify-center px-6 py-16">
       <div className="w-full max-w-2xl">
-        <span className="card-brand grid size-20 place-items-center rounded-[26px] text-white">
+        <span className="grid size-20 place-items-center rounded-[26px] bg-royal-600 text-white">
           <SunEmblem className="size-12" />
         </span>
-        <p className="mt-9 text-sm font-bold tracking-[0.14em] text-gold-400 uppercase">Universitas Muhammadiyah Makassar</p>
-        <h1 className="mt-3 text-4xl leading-[1.05] font-extrabold tracking-[-0.03em] text-balance sm:text-6xl">
+        <h1 className="mt-9 text-4xl leading-[1.05] font-extrabold tracking-[-0.03em] text-balance sm:text-6xl">
           Masjid Subulussalam Al-Khoory
         </h1>
+        <p className="mt-3 text-base font-bold text-gold-400">Universitas Muhammadiyah Makassar</p>
         <p className="mt-4 max-w-xl text-lg text-sky-200/75">Layar informasi masjid yang dapat dikelola langsung dari HP pengurus.</p>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           {links.map(({ href, title, desc, icon, brand }) => (

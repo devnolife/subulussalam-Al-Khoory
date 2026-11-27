@@ -38,11 +38,11 @@ export function PrayerOverlay({ phase, now }: { phase: Exclude<PrayerPhase, { ki
   if (phase.kind === "adzan") {
     return (
       <div className="scene absolute inset-0 z-40 flex flex-col items-center justify-center overflow-hidden text-center">
-        <div className="pattern pattern-fade absolute inset-0" />
+        <div className="pattern absolute inset-0" />
         <div className="relative grid place-items-center">
           <span className="animate-ripple absolute size-[176px] rounded-full border-2 border-gold-400/50" />
           <span className="animate-ripple absolute size-[176px] rounded-full border-2 border-gold-400/50 [animation-delay:1.8s]" />
-          <span className="card-brand relative grid size-[176px] place-items-center rounded-[52px] text-white">
+          <span className="relative grid size-[176px] bg-royal-600 place-items-center rounded-[52px] text-white">
             <SunEmblem className="size-28" />
           </span>
         </div>
@@ -67,7 +67,7 @@ export function PrayerOverlay({ phase, now }: { phase: Exclude<PrayerPhase, { ki
   if (phase.kind === "doa") {
     return (
       <div className="scene absolute inset-0 z-40 flex flex-col items-center justify-center overflow-hidden px-24 text-center">
-        <div className="pattern pattern-fade absolute inset-0" />
+        <div className="pattern absolute inset-0" />
         <p className="relative flex items-center gap-4 text-[28px] font-extrabold tracking-[0.24em] text-gold-400 uppercase">
           <HandHeart className="size-9" aria-hidden="true" />
           Doa setelah adzan
@@ -89,7 +89,7 @@ export function PrayerOverlay({ phase, now }: { phase: Exclude<PrayerPhase, { ki
   const progress = (now - phase.startsAt) / Math.max(1, phase.endsAt - phase.startsAt);
   return (
     <div className="scene absolute inset-0 z-40 flex items-center justify-center gap-28 overflow-hidden px-24">
-      <div className="pattern pattern-fade absolute inset-0" />
+      <div className="pattern absolute inset-0" />
       <ProgressRing size={600} stroke={24} progress={progress} trackClassName="text-white/10" barClassName="text-gold-400">
         <div className="text-center">
           <p className="text-[28px] font-extrabold tracking-[0.24em] text-sky-200/80 uppercase">Iqamah dalam</p>
@@ -121,9 +121,8 @@ export function EmergencyOverlay({ text }: { text: string }) {
   return (
     <div
       role="alert"
-      className="card-brand outline-gold absolute inset-x-14 top-[132px] z-30 flex h-[676px] flex-col justify-center overflow-hidden rounded-[36px] p-16"
+      className="card-bata outline-gold absolute inset-x-14 top-[132px] z-30 flex h-[676px] flex-col justify-center overflow-hidden rounded-[36px] p-16"
     >
-      <div className="pattern pattern-fade absolute inset-0" />
       <div className="relative flex items-center gap-5">
         <IconTile icon={TriangleAlert} tone="gold" size="lg" />
         <p className="text-[30px] font-extrabold tracking-[0.14em] text-gold-400 uppercase">Pengumuman penting</p>

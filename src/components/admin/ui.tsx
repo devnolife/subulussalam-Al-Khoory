@@ -13,10 +13,10 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" | "danger" | "gold"; loading?: boolean }) {
   const styles = {
-    primary: "card-brand text-white hover:brightness-110",
+    primary: "bg-royal-600 text-white hover:bg-royal-500",
     gold: "bg-gold-400 text-navy-950 hover:bg-gold-300",
     ghost: "bg-white/[0.07] text-white ring-1 ring-white/10 hover:bg-white/12",
-    danger: "bg-rose-500/15 text-rose-200 ring-1 ring-rose-400/30 hover:bg-rose-500/25",
+    danger: "bg-bata-700/35 text-bata-200 ring-1 ring-bata-400/40 hover:bg-bata-700/55",
   }[variant];
   return (
     <button

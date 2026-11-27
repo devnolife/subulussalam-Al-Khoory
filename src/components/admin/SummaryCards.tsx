@@ -50,17 +50,16 @@ export function SummaryCards() {
       {finance && (
         <Link
           href="/admin/kas"
-          className="card-brand relative block overflow-hidden rounded-[24px] p-4 transition-[scale] duration-150 active:scale-[0.98]"
+          className="card-zamrud relative block overflow-hidden rounded-[24px] p-4 transition-[scale] duration-150 active:scale-[0.98]"
         >
-          <div className="pattern pattern-fade absolute inset-0" />
-          <p className="relative flex items-center gap-2 text-sm font-bold text-sky-100">
+         <p className="relative flex items-center gap-2 text-sm font-bold text-sky-100">
             <Wallet className="size-4 text-gold-400" aria-hidden="true" /> Saldo kas
             <ChevronRight className="ml-auto size-4 text-white/40" aria-hidden="true" />
           </p>
           <p className="relative mt-1 text-2xl font-extrabold tracking-[-0.02em] tabular-nums">{rupiah(finance.balance)}</p>
           <p className="relative mt-1 text-sm text-sky-100/80 tabular-nums">
-            {finance.monthLabel}: <span className="font-bold text-emerald-300">+{rupiah(finance.monthIn)}</span> ·{" "}
-            <span className="font-bold text-rose-300">−{rupiah(finance.monthOut)}</span>
+            {finance.monthLabel}: <span className="font-bold text-white">+{rupiah(finance.monthIn)}</span> ·{" "}
+            <span className="font-bold text-bata-200">−{rupiah(finance.monthOut)}</span>
           </p>
           {finance.monthDonors > 0 && (
             <p className="relative mt-0.5 text-xs text-sky-100/70">{finance.monthDonors} donatur tercatat bulan ini</p>

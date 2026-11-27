@@ -101,8 +101,7 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
   if (!current) {
     return (
       <section className="card relative flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[32px] text-center">
-        <div className="pattern pattern-fade absolute inset-0" />
-        <span className="card-brand relative grid size-36 place-items-center rounded-[44px] text-white">
+        <span className="relative grid size-36 bg-royal-600 place-items-center rounded-[44px] text-white">
           <SunEmblem className="size-24" />
         </span>
         <p className="relative mt-8 text-[48px] font-extrabold tracking-[-0.02em]">{state.settings.mosque.name}</p>
@@ -116,7 +115,6 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
 
   return (
     <section className={`relative min-w-0 flex-1 overflow-hidden rounded-[32px] ${fullBleed ? "bg-navy-900" : "card"}`}>
-      {!fullBleed && <div className="pattern pattern-fade pointer-events-none absolute inset-0" />}
       <div key={`${current.type}-${cursor.startedAt}`} className="animate-panel-in relative size-full">
         {renderModule(current.type, state, current, now, ramadhan)}
       </div>

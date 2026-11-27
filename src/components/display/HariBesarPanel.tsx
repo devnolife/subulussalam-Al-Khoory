@@ -25,13 +25,12 @@ export function HariBesarPanel({ state, now }: { state: DisplayState; now: numbe
 
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={MoonStar} title="Hari besar Islam" meta="Perkiraan kalender Hijriah" />
+      <PanelHeader icon={MoonStar} title="Hari besar Islam" meta="Perkiraan kalender Hijriah" tone="ungu" />
       <div className="grid min-h-0 flex-1 grid-cols-[1.15fr_1fr] gap-5">
         <article
-          className="card-brand rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8"
+          className="card-ungu rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8"
           style={delay(1)}
         >
-          <div className="pattern pattern-fade absolute inset-0" />
           <div className="relative">
             <Chip icon={Sparkles} tone="gold">
               {next.daysLeft === 0 ? "Hari ini" : "Terdekat"}

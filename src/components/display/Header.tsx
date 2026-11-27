@@ -35,7 +35,7 @@ export function Header({ state, offline }: { state: DisplayState; offline: boole
       <div className="flex min-w-0 items-center gap-6">
         <div
           className={`grid size-[88px] shrink-0 place-items-center overflow-hidden rounded-[28px] ${
-            mosque.logo ? "bg-white p-2.5" : "card-brand p-3.5 text-white"
+            mosque.logo ? "bg-white p-2.5" : "bg-royal-600 p-3.5 text-white"
           }`}
         >
           {mosque.logo ? (

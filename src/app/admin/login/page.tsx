@@ -36,40 +36,48 @@ export default function LoginPage() {
   return (
     <main className="scene flex min-h-dvh items-center justify-center p-6">
       <form onSubmit={submit} className="card w-full max-w-sm rounded-[32px] p-7 text-center">
-        <span className="card-brand mx-auto grid size-20 place-items-center rounded-[26px] text-white">
+        <span className="mx-auto grid size-20 bg-royal-600 place-items-center rounded-[26px] text-white">
           <SunEmblem className="size-12" />
         </span>
         <h1 className="mt-6 text-2xl font-extrabold tracking-[-0.02em]">Panel pengurus masjid</h1>
         <p className="mt-1.5 text-sm text-sky-200/70">Masuk dengan akun pengurus Anda</p>
-        <div className="mt-8 space-y-3 text-left">
-          <div className="relative">
-            <UserRound className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-gold-400" aria-hidden="true" />
-            <input
-              name="username"
-              autoComplete="username"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              autoFocus
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Nama pengguna"
-              aria-label="Nama pengguna"
-              className={inputCls}
-            />
+        <div className="mt-8 space-y-4 text-left">
+          <div>
+            <label htmlFor="username" className="mb-1.5 block text-sm font-bold text-sky-200">
+              Nama pengguna
+            </label>
+            <div className="relative">
+              <UserRound className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-gold-400" aria-hidden="true" />
+              <input
+                id="username"
+                name="username"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoFocus
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={inputCls}
+              />
+            </div>
           </div>
-          <div className="relative">
-            <KeyRound className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-gold-400" aria-hidden="true" />
-            <input
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              aria-label="Password"
-              className={inputCls}
-            />
+          <div>
+            <label htmlFor="password" className="mb-1.5 block text-sm font-bold text-sky-200">
+              Password
+            </label>
+            <div className="relative">
+              <KeyRound className="absolute top-1/2 left-4 size-5 -translate-y-1/2 text-gold-400" aria-hidden="true" />
+              <input
+                type="password"
+                id="password"
+                name="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={inputCls}
+              />
+            </div>
           </div>
         </div>
         {error && (

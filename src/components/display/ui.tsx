@@ -1,13 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-type TileTone = "brand" | "gold" | "soft";
+type TileTone = "brand" | "zamrud" | "ungu" | "bata" | "gold" | "soft";
 type TileSize = "sm" | "md" | "lg" | "xl";
 
 const TILE_TONE: Record<TileTone, string> = {
-  brand: "card-brand text-gold-400",
-  gold: "bg-gold-400 text-navy-950 shadow-[inset_0_1px_0_rgb(255_255_255/0.55)]",
-  soft: "bg-white/10 text-sky-200 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]",
+  brand: "bg-royal-600 text-gold-400",
+  zamrud: "bg-zamrud-600 text-white",
+  ungu: "bg-ungu-600 text-white",
+  bata: "bg-bata-600 text-white",
+  gold: "bg-gold-400 text-navy-950",
+  soft: "bg-white/10 text-sky-200",
 };
 
 const TILE_SIZE: Record<TileSize, { box: string; glyph: string }> = {
@@ -40,7 +43,7 @@ export function IconTile({
 type ChipTone = "glass" | "gold";
 
 const CHIP_TONE: Record<ChipTone, string> = {
-  glass: "bg-white/12 text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)]",
+  glass: "bg-white/12 text-white",
   gold: "bg-gold-400 text-navy-950",
 };
 
@@ -65,10 +68,11 @@ export function Chip({
   );
 }
 
-export function PanelHeader({ icon, title, meta }: { icon: LucideIcon; title: string; meta?: string }) {
+/** `tone` mengikuti peran warna modul (lihat DESIGN.md). */
+export function PanelHeader({ icon, title, meta, tone = "brand" }: { icon: LucideIcon; title: string; meta?: string; tone?: TileTone }) {
   return (
     <header className="rise mb-7 flex items-center gap-5">
-      <IconTile icon={icon} size="lg" />
+      <IconTile icon={icon} size="lg" tone={tone} />
       <h2 className="text-[40px] leading-none font-extrabold tracking-[-0.02em]">{title}</h2>
       {meta && <Chip className="ml-auto">{meta}</Chip>}
     </header>
@@ -148,7 +152,7 @@ export function Avatar({ name, photo, className = "" }: { name: string; photo: s
   }
   return (
     <span
-      className={`grid shrink-0 place-items-center bg-white/10 font-extrabold text-gold-400 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)] ${className}`}
+      className={`grid shrink-0 place-items-center bg-white/10 font-extrabold text-gold-400 ${className}`}
       aria-hidden="true"
     >
       {initials(name)}
