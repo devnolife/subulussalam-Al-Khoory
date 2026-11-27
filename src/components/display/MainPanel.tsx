@@ -2,10 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DisplayState, ModuleType, PlaylistItem } from "@/lib/types";
-import { activeItems, contentAvailability } from "@/lib/playlist";
+import { activeItems, contentAvailability, ramadhanFor, seasonTime } from "@/lib/playlist";
+import type { RamadhanView } from "@/lib/ramadhan";
+import type { DisplayTarawih } from "@/lib/types";
 import { SunEmblem } from "./SunEmblem";
 import { HariBesarPanel } from "./HariBesarPanel";
 import { DonaturPanel } from "./DonaturPanel";
+import { PengurusPanel, boardPages } from "./PengurusPanel";
+import { RamadhanPanel } from "./RamadhanPanel";
 import {
   AyatPanel,
   JumatPanel,
@@ -18,17 +22,25 @@ import {
 } from "./Modules";
 
 function itemDuration(item: PlaylistItem, state: DisplayState): number {
-  return item.type === "slides" ? item.durationSec * Math.max(1, state.slides.length) : item.durationSec;
+  if (item.type === "slides") return item.durationSec * Math.max(1, state.slides.length);
+  if (item.type === "pengurus") return item.durationSec * boardPages(state.board.length);
+  return item.durationSec;
 }
 
-function renderModule(type: ModuleType, state: DisplayState, item: PlaylistItem, now: number) {
+function renderModule(
+  type: ModuleType,
+  state: DisplayState,
+  item: PlaylistItem,
+  now: number,
+  ramadhan: RamadhanView<DisplayTarawih> | null,
+) {
   switch (type) {
     case "kabah":
       return <KabahPanel state={state} />;
     case "slides":
       return <SlidesPanel state={state} perSlideSec={item.durationSec} />;
     case "kajian":
-      return <KajianPanel state={state} />;
+      return <KajianPanel state={state} now={now} />;
     case "jumat":
       return <JumatPanel state={state} />;
     case "kas":
@@ -43,12 +55,19 @@ function renderModule(type: ModuleType, state: DisplayState, item: PlaylistItem,
       return <HariBesarPanel state={state} now={now} />;
     case "donatur":
       return <DonaturPanel state={state} />;
+    case "pengurus":
+      return <PengurusPanel state={state} perPageSec={item.durationSec} />;
+    case "ramadhan":
+      return <RamadhanPanel view={ramadhan} now={seasonTime(state, now)} />;
   }
 }
 
 /** Panel utama: memutar modul sesuai playlist (urutan, durasi, pin, override admin). */
 export function MainPanel({ state, now }: { state: DisplayState; now: number }) {
-  const availability = useMemo(() => contentAvailability(state), [state]);
+  // Ketersediaan konten bergantung waktu (kajian lewat, musim Ramadhan), cukup dihitung ulang tiap menit.
+  const minute = Math.floor(now / 60_000) * 60_000;
+  const availability = useMemo(() => contentAvailability(state, minute), [state, minute]);
+  const ramadhan = useMemo(() => ramadhanFor(state, minute), [state, minute]);
   const overrideActive = !!state.settings.override.type && (!state.settings.override.until || state.settings.override.until > now);
   const items = useMemo(
     () => activeItems(state.playlist, availability, state.settings.override, now),
@@ -99,7 +118,7 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
     <section className={`relative min-w-0 flex-1 overflow-hidden rounded-[32px] ${fullBleed ? "bg-navy-900" : "card"}`}>
       {!fullBleed && <div className="pattern pattern-fade pointer-events-none absolute inset-0" />}
       <div key={`${current.type}-${cursor.startedAt}`} className="animate-panel-in relative size-full">
-        {renderModule(current.type, state, current, now)}
+        {renderModule(current.type, state, current, now, ramadhan)}
       </div>
       {items.length > 1 && (
         <div

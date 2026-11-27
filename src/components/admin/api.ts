@@ -28,7 +28,9 @@ export async function api<T = unknown>(path: string, init: { method?: string; bo
   return data as T;
 }
 
-export async function uploadImage(file: File, kind: "poster" | "qris" | "logo" = "poster"): Promise<string> {
+export type ImageKind = "poster" | "qris" | "logo" | "photo";
+
+export async function uploadImage(file: File, kind: ImageKind = "poster"): Promise<string> {
   const form = new FormData();
   form.append("file", file);
   form.append("kind", kind);

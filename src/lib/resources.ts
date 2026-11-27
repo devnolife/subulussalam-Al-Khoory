@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { query } from "./db";
-import { ZISWAF_KINDS } from "./types";
+import { IED_KINDS, IED_LABELS, KAJIAN_RECURRENCES, ZISWAF_KINDS } from "./types";
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal YYYY-MM-DD");
 const optionalDate = z
@@ -13,6 +13,16 @@ const optionalId = z
   .transform((v) => (typeof v === "number" ? v : null))
   .optional();
 const text = (max = 500) => z.string().trim().max(max);
+/** Jam "HH:MM" atau kosong. */
+const hhmm = z
+  .string()
+  .trim()
+  .regex(/^(?:([01]\d|2[0-3]):[0-5]\d)?$/, "Format jam HH:MM")
+  .default("");
+const optionalWeekday = z
+  .union([z.literal(""), z.null(), z.coerce.number().int().min(0).max(6)])
+  .transform((v) => (typeof v === "number" ? v : null))
+  .optional();
 
 /** Definisi resource admin: tabel, kolom (camelCase → snake_case), dan validasi. */
 export const RESOURCES = {
@@ -35,9 +45,16 @@ export const RESOURCES = {
     schema: z.object({
       title: text(160).min(1, "Judul wajib diisi"),
       speaker: text(120).default(""),
+      speakerId: optionalId,
+      recurrence: z.enum(KAJIAN_RECURRENCES).default("text"),
+      dayOfWeek: optionalWeekday,
+      date: optionalDate,
+      startTime: hhmm,
+      endTime: hhmm,
       schedule: text(120).default(""),
       time: text(60).default(""),
       location: text(120).default(""),
+      banner: text(300).default(""),
       active: z.boolean().default(true),
       sort: z.coerce.number().int().default(0),
     }),
@@ -48,9 +65,56 @@ export const RESOURCES = {
     schema: z.object({
       date: dateStr,
       khatib: text(120).default(""),
+      khatibSpeakerId: optionalId,
       imam: text(120).default(""),
       muadzin: text(120).default(""),
       theme: text(200).default(""),
+    }),
+  },
+  speakers: {
+    table: "speakers",
+    order: "sort, name",
+    schema: z.object({
+      name: text(120).min(1, "Nama wajib diisi"),
+      profile: text(160).default(""),
+      photo: text(300).default(""),
+      active: z.boolean().default(true),
+      sort: z.coerce.number().int().default(0),
+    }),
+  },
+  board_members: {
+    table: "board_members",
+    order: "sort, id",
+    schema: z.object({
+      name: text(120).min(1, "Nama wajib diisi"),
+      position: text(120).default(""),
+      photo: text(300).default(""),
+      active: z.boolean().default(true),
+      sort: z.coerce.number().int().default(0),
+    }),
+  },
+  tarawih: {
+    table: "tarawih",
+    order: "date, id",
+    schema: z.object({
+      date: dateStr,
+      imam: text(120).default(""),
+      speaker: text(120).default(""),
+      speakerId: optionalId,
+      theme: text(200).default(""),
+    }),
+  },
+  ied: {
+    table: "ied",
+    order: "date DESC, id",
+    schema: z.object({
+      kind: z.enum(IED_KINDS),
+      date: dateStr,
+      time: hhmm,
+      location: text(160).default(""),
+      khatib: text(120).default(""),
+      imam: text(120).default(""),
+      note: text(200).default(""),
     }),
   },
   finance: {
@@ -134,10 +198,18 @@ function toCamel(row: Record<string, unknown>) {
 }
 
 /** Kolom DATE dikembalikan sebagai string agar tidak bergeser zona waktu. */
+const DATE_COLUMNS: Record<string, string[]> = {
+  jumat: ["date"],
+  finance: ["date"],
+  kajian: ["date"],
+  tarawih: ["date"],
+  ied: ["date"],
+  announcements: ["ends_at"],
+};
+
 function selectList(table: string) {
-  if (table === "jumat" || table === "finance") return "*, to_char(date, 'YYYY-MM-DD') AS __date";
-  if (table === "announcements") return "*, to_char(ends_at, 'YYYY-MM-DD') AS __ends_at";
-  return "*";
+  const dates = DATE_COLUMNS[table] ?? [];
+  return ["*", ...dates.map((c) => `to_char(${c}, 'YYYY-MM-DD') AS __${c}`)].join(", ");
 }
 
 export async function listResource<T = Record<string, unknown>>(name: ResourceName, where = ""): Promise<T[]> {
@@ -190,6 +262,10 @@ export function describeRecord(name: ResourceName, data: Record<string, unknown>
       .filter(Boolean)
       .join(" · "),
     finance_categories: s("name"),
+    speakers: s("name"),
+    board_members: [s("name"), s("position")].filter(Boolean).join(" · "),
+    tarawih: [s("date"), s("imam") || s("speaker")].filter(Boolean).join(" · "),
+    ied: [IED_LABELS[data.kind as keyof typeof IED_LABELS] ?? "", s("date")].filter(Boolean).join(" · "),
     verses: s("source") || s("translation"),
     slides: s("caption") || s("image"),
     playlist: s("type"),

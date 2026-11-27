@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "./api";
+import { api, type ImageKind } from "./api";
 import { Button, Card, EmptyState, Field, ImageField, PageHeader, Select, Sheet, TextArea, TextInput, Toggle } from "./ui";
 
-type Option = { value: string; label: string };
+export type Option = { value: string; label: string };
 type Row = { id: number } & Record<string, unknown>;
 /** Data resource lain yang dimuat sekali (mis. kategori untuk pilihan select). */
 export type Lookups = Record<string, Row[]>;
@@ -14,12 +14,14 @@ export type Lookups = Record<string, Row[]>;
 export type FieldDef = {
   name: string;
   label: string;
-  type: "text" | "textarea" | "arabic" | "date" | "number" | "bool" | "select" | "image";
+  type: "text" | "textarea" | "arabic" | "date" | "time" | "number" | "bool" | "select" | "image";
   options?: Option[] | ((record: Record<string, unknown>, lookups: Lookups) => Option[]);
   /** Field hanya tampil bila bernilai true untuk data yang sedang diisi. */
   show?: (record: Record<string, unknown>) => boolean;
   placeholder?: string;
   help?: string;
+  /** Jenis kompresi untuk field gambar (default poster). */
+  imageKind?: ImageKind;
 };
 
 /** Halaman daftar + form tambah/ubah/hapus yang dipakai semua modul konten. */
@@ -186,10 +188,10 @@ export function CrudPage<T extends Row>({
                     ) : f.type === "select" ? (
                       <Select value={String(v ?? "")} onChange={(e) => set(f.name, e.target.value)} options={options} />
                     ) : f.type === "image" ? (
-                      <ImageField value={(v as string) || null} onChange={(url) => set(f.name, url ?? "")} />
+                      <ImageField value={(v as string) || null} onChange={(url) => set(f.name, url ?? "")} kind={f.imageKind} />
                     ) : (
                       <TextInput
-                        type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                        type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "time" ? "time" : "text"}
                         inputMode={f.type === "number" ? "numeric" : undefined}
                         value={String(v ?? "")}
                         onChange={(e) =>

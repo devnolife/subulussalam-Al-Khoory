@@ -19,7 +19,7 @@ Buka `http://localhost:3000/display` untuk TV dan `http://localhost:3000/admin` 
 
 Untuk pengembangan atau preview Vercel, atur `DEMO_MODE=1` di `.env.local` atau di environment variables project Vercel, lalu jalankan/deploy aplikasi dan buka `/demo`. Tidak perlu mengatur `DATABASE_URL` atau password admin untuk simulasi ini.
 
-Pilih panel dan kondisi layar pada halaman tersebut untuk melihat contoh kegiatan hari ini dan penceramah, petugas Jumat, poster, kas, donatur dan ZISWAF, ayat, donasi, hari besar Islam, pengumuman, azan, doa setelah azan, iqamah, sholat, serta pengumuman darurat. API contoh tersedia di `/api/display/state?demo=1`, dan menerima pilihan `module` serta `phase` seperti yang digunakan halaman simulasi.
+Pilih panel dan kondisi layar pada halaman tersebut untuk melihat contoh kegiatan hari ini dan penceramah, petugas Jumat, poster, kas, donatur dan ZISWAF, ayat, donasi, hari besar Islam, pengurus masjid, Ramadhan dan sholat Ied, pengumuman, azan, doa setelah azan, iqamah, sholat, serta pengumuman darurat. Di luar bulan Ramadhan, panel Ramadhan disimulasikan pada hari ke-12 Ramadhan berikutnya pukul 15.00 WITA. API contoh tersedia di `/api/display/state?demo=1`, dan menerima pilihan `module` serta `phase` seperti yang digunakan halaman simulasi.
 
 Semua data hanya contoh; QRIS tidak bisa dipindai, cuaca bukan data aktual, dan jadwal sholat hanya perkiraan. Panel Live Ka'bah memutar siaran YouTube asli. Simulasi hanya pratinjau: panel admin, upload, dan realtime antarperangkat tetap memerlukan layanan operasional dan tidak disimulasikan. `/admin` dan `/display` biasa tetap memerlukan database; simulasi tidak menulis ke sana. Jangan mengaktifkan `DEMO_MODE` pada deployment operasional.
 
@@ -50,7 +50,7 @@ Admin menambah pengurus lain di Pengaturan › **Pengguna**, lalu memilih perann
 | --- | --- |
 | Admin | Semua menu, pengaturan masjid, pengguna, dan riwayat aktivitas |
 | Bendahara | Kas dan infak, kategori kas, dan donatur |
-| Konten | Konten layar (pengumuman, kajian, Jumat, ayat, slide), urutan tampilan, upload gambar, dan remote TV |
+| Konten | Konten layar (pengumuman, kajian, pembicara, Jumat, tarawih, sholat Ied, pengurus, ayat, slide), urutan tampilan, upload gambar, dan remote TV |
 | Operator TV | Remote TV dan urutan tampilan |
 
 Di halaman Pengguna, admin juga bisa mengubah peran, mereset password, dan menonaktifkan akun; akun yang dinonaktifkan atau direset langsung keluar dari semua perangkat. Akun tidak dihapus agar riwayat tetap utuh. Admin tidak bisa menonaktifkan akunnya sendiri, dan admin aktif terakhir tidak bisa diturunkan perannya atau dinonaktifkan. Setelah 5 kali salah password untuk satu nama pengguna (atau 20 kali dari satu alamat), login dikunci 5 menit.
@@ -66,6 +66,23 @@ Beranda Remote menampilkan kartu ringkasan sesuai peran: saldo kas, pemasukan da
 - Pemasukan bisa mencatat **nama donatur**. Nama hanya tampil di layar TV bila "Tampilkan nama di layar" diaktifkan; jika tidak, layar menulis "Hamba Allah". Nama yang disembunyikan tidak dikirim ke layar.
 - Panel **Laporan kas** menampilkan saldo, pemasukan dan pengeluaran bulan ini, rincian kategori terbesar bulan ini (bila ada transaksi berkategori), dan transaksi terakhir.
 - Panel **Donatur & ZISWAF** menampilkan donatur 60 hari terakhir (paling banyak 8) dan rekap penerimaan serta penyaluran ZISWAF bulan dan tahun ini. Panel ini dilewati bila belum ada donatur maupun transaksi ZISWAF tahun ini. Atur urutan dan durasinya di menu Tampilan.
+
+## Kajian, pembicara, pengurus, dan Ramadhan
+
+Semua menu berikut ada di **Konten** dan bisa dikelola admin maupun peran Konten.
+
+- **Pembicara**: daftar ustadz, khatib, dan pemateri dengan profil singkat dan foto (opsional). Jangan isi nomor telepon; profil tampil di layar. Saat mengisi kajian, petugas Jumat, atau tarawih, pilih pembicara dari daftar agar foto dan nama terbarunya tampil di TV, atau pilih "Ketik nama manual". Pembicara yang dinonaktifkan tidak muncul lagi di pilihan, tetapi jadwal lama tetap menampilkannya.
+- **Jadwal kajian** punya tiga jenis jadwal:
+  - **Rutin setiap pekan**: pilih hari, jam mulai, dan jam selesai (opsional). Setelah jam selesai, layar menampilkan pertemuan pekan berikutnya.
+  - **Sekali**: pilih tanggal. Kajian otomatis hilang dari layar setelah tanggalnya lewat, atau setelah jam selesai pada hari itu.
+  - **Jadwal bebas**: hari/tanggal ditulis manual seperti sebelumnya. Kajian lama otomatis memakai jenis ini.
+
+  Panel kajian menyorot kajian terdekat dengan penanda "Hari ini" atau "Besok", foto pemateri, dan gambar latar (opsional).
+- **Pengurus**: nama, jabatan, dan foto pengurus untuk panel **Pengurus Masjid**. Tanpa foto, layar menampilkan inisial nama. Lebih dari delapan pengurus ditampilkan bergantian per halaman, masing-masing selama durasi yang diatur di menu Tampilan.
+- **Petugas tarawih**: imam, penceramah, dan tema ceramah tiap malam. Isi tanggal hari ketika tarawih dikerjakan pada malamnya; nomor malam dihitung dari pengaturan Kalender Hijriah.
+- **Sholat Ied**: tanggal, jam, tempat, khatib, dan imam sholat Idul Fitri atau Idul Adha. Tanggal awal yang terisi hanya perkiraan kalender, jadi sesuaikan dengan penetapan pemerintah.
+
+Panel **Ramadhan & Hari Raya** hanya tampil di musimnya: sejak sehari sebelum 1 Ramadhan sampai akhir Ramadhan, pada malam yang sudah ada petugas tarawihnya, dan mulai 30 hari sebelum sholat Ied yang diisi. Isinya waktu imsak dan berbuka beserta hitung mundur berbuka, petugas tarawih malam ini dan berikutnya, serta info sholat Ied. Awal Ramadhan mengikuti pengaturan Kalender Hijriah, jadi isi awal bulan Ramadhan dan Syawal sesuai penetapan.
 
 ## Cadangan
 

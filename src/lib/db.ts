@@ -44,6 +44,27 @@ ALTER TABLE finance ADD COLUMN IF NOT EXISTS category_id INT REFERENCES finance_
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS donor TEXT NOT NULL DEFAULT '';
 ALTER TABLE finance ADD COLUMN IF NOT EXISTS show_donor BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS finance_date_idx ON finance (date DESC, id DESC);
+CREATE TABLE IF NOT EXISTS speakers (
+  id SERIAL PRIMARY KEY, name TEXT NOT NULL, profile TEXT NOT NULL DEFAULT '', photo TEXT NOT NULL DEFAULT '',
+  active BOOLEAN NOT NULL DEFAULT TRUE, sort INT NOT NULL DEFAULT 0);
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS speaker_id INT REFERENCES speakers(id) ON DELETE SET NULL;
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS recurrence TEXT NOT NULL DEFAULT 'text' CHECK (recurrence IN ('weekly','once','text'));
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS day_of_week INT CHECK (day_of_week BETWEEN 0 AND 6);
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS date DATE;
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS start_time TEXT NOT NULL DEFAULT '';
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS end_time TEXT NOT NULL DEFAULT '';
+ALTER TABLE kajian ADD COLUMN IF NOT EXISTS banner TEXT NOT NULL DEFAULT '';
+ALTER TABLE jumat ADD COLUMN IF NOT EXISTS khatib_speaker_id INT REFERENCES speakers(id) ON DELETE SET NULL;
+CREATE TABLE IF NOT EXISTS board_members (
+  id SERIAL PRIMARY KEY, name TEXT NOT NULL, position TEXT NOT NULL DEFAULT '', photo TEXT NOT NULL DEFAULT '',
+  active BOOLEAN NOT NULL DEFAULT TRUE, sort INT NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS tarawih (
+  id SERIAL PRIMARY KEY, date DATE NOT NULL, imam TEXT NOT NULL DEFAULT '', speaker TEXT NOT NULL DEFAULT '',
+  speaker_id INT REFERENCES speakers(id) ON DELETE SET NULL, theme TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS ied (
+  id SERIAL PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('fitri','adha')), date DATE NOT NULL,
+  time TEXT NOT NULL DEFAULT '', location TEXT NOT NULL DEFAULT '', khatib TEXT NOT NULL DEFAULT '',
+  imam TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '');
 `;
 
 const SEED_PLAYLIST: [string, number][] = [
@@ -57,6 +78,8 @@ const SEED_PLAYLIST: [string, number][] = [
   ["pengumuman", 15],
   ["haribesar", 15],
   ["donatur", 15],
+  ["pengurus", 15],
+  ["ramadhan", 20],
 ];
 
 /** Kategori awal; pengurus bisa mengubah, menonaktifkan, atau menambah sendiri. */

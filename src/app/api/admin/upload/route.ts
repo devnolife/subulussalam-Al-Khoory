@@ -9,7 +9,7 @@ import { uploadDir } from "@/lib/uploads";
 const MAX_BYTES = 10 * 1024 * 1024;
 
 /**
- * Unggah gambar: poster dikompres ke WebP (maks 1920px),
+ * Unggah gambar: poster dikompres ke WebP (maks 1920px), foto orang ke WebP (maks 800px),
  * QRIS/logo disimpan PNG lossless agar tetap tajam dan bisa dipindai.
  */
 export async function POST(request: Request) {
@@ -25,7 +25,8 @@ export async function POST(request: Request) {
 
     const input = Buffer.from(await file.arrayBuffer());
     const lossless = kind === "qris" || kind === "logo";
-    const img = sharp(input).rotate().resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true });
+    const max = kind === "photo" ? 800 : 1920;
+    const img = sharp(input).rotate().resize({ width: max, height: max, fit: "inside", withoutEnlargement: true });
     const output = lossless ? await img.png().toBuffer() : await img.webp({ quality: 82 }).toBuffer();
     const name = `${randomUUID()}.${lossless ? "png" : "webp"}`;
 

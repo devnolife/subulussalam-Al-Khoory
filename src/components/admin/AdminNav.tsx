@@ -19,7 +19,7 @@ const NAV = [
     href: "/admin/konten",
     label: "Konten",
     icon: LayoutGrid,
-    match: (p: string) => /^\/admin\/(konten|pengumuman|kajian|jumat|kas|ayat|slide)/.test(p),
+    match: (p: string) => /^\/admin\/(konten|pengumuman|kajian|jumat|kas|ayat|slide|pembicara|pengurus|tarawih|ied)/.test(p),
     show: (r: Role) => can(r, "content") || can(r, "finance"),
   },
   {

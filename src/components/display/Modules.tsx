@@ -19,6 +19,7 @@ import {
   Radio,
   ScanLine,
   Smartphone,
+  Sparkles,
   TrendingDown,
   TrendingUp,
   UserRound,
@@ -29,7 +30,8 @@ import {
 import type { DisplayState } from "@/lib/types";
 import { formatDateStr, monthLabel, rupiah } from "@/lib/time";
 import { youtubeSources } from "@/lib/youtube";
-import { Chip, IconTile, PanelHeader, StarOrnament } from "./ui";
+import { arrangeKajian, kajianScheduleLabel, kajianTimeLabel } from "@/lib/kajian";
+import { Avatar, Chip, IconTile, PanelHeader, StarOrnament } from "./ui";
 import { loadYouTubeApi, type YouTubeApi, type YouTubePlayer } from "./youtubeApi";
 
 type P = { state: DisplayState };
@@ -254,37 +256,64 @@ export function SlidesPanel({ state, perSlideSec }: P & { perSlideSec: number })
   );
 }
 
-export function KajianPanel({ state }: P) {
-  const [featured, ...rest] = state.kajian;
+export function KajianPanel({ state, now }: P & { now: number }) {
+  const list = arrangeKajian(state.kajian, now);
+  const [featured, ...rest] = list;
   if (!featured) return null;
   const others = rest.slice(0, 3);
+  const todayCount = list.filter((k) => k.relative === "Hari ini").length;
+  const featuredSchedule = kajianScheduleLabel(featured);
+  const featuredTime = kajianTimeLabel(featured);
+  const presenter = featured.presenter;
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={BookOpenText} title="Agenda kajian" meta={`${state.kajian.length} agenda`} />
+      <PanelHeader
+        icon={BookOpenText}
+        title="Agenda kajian"
+        meta={todayCount ? `${todayCount} hari ini · ${list.length} agenda` : `${list.length} agenda`}
+      />
       <div className={`grid min-h-0 flex-1 gap-5 ${others.length ? "grid-cols-[1.15fr_1fr]" : "grid-cols-1"}`}>
         <article
           className="card-brand rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8"
           style={delay(1)}
         >
-          <div className="pattern pattern-fade absolute inset-0" />
+          {featured.banner ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={featured.banner} alt="" className="absolute inset-0 size-full object-cover opacity-40" />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-navy-950/70 to-navy-950/30" />
+            </>
+          ) : (
+            <div className="pattern pattern-fade absolute inset-0" />
+          )}
           <div className="relative">
             <div className="flex flex-wrap gap-2.5">
-              {featured.schedule && (
-                <Chip icon={CalendarDays} tone="gold">
-                  {featured.schedule}
+              {featured.relative && (
+                <Chip icon={Sparkles} tone="gold">
+                  {featured.relative}
                 </Chip>
               )}
-              {featured.time && <Chip icon={Clock3}>{featured.time}</Chip>}
+              {featuredSchedule && (
+                <Chip icon={CalendarDays} tone={featured.relative ? "glass" : "gold"}>
+                  {featuredSchedule}
+                </Chip>
+              )}
+              {featuredTime && <Chip icon={Clock3}>{featuredTime}</Chip>}
             </div>
             <h3 className="mt-6 line-clamp-3 text-[42px] leading-[1.1] font-extrabold tracking-[-0.02em]">{featured.title}</h3>
           </div>
           <div className="relative space-y-4">
-            {featured.speaker && (
+            {presenter && (
               <div className="flex items-center gap-4 rounded-[22px] bg-white/12 p-3 pr-6">
-                <IconTile icon={Mic2} tone="gold" />
+                {presenter.photo ? (
+                  <Avatar name={presenter.name} photo={presenter.photo} className="size-20 rounded-[18px]" />
+                ) : (
+                  <IconTile icon={Mic2} tone="gold" />
+                )}
                 <div className="min-w-0">
                   <p className="text-[16px] font-extrabold tracking-[0.14em] text-sky-200/80 uppercase">Pemateri</p>
-                  <p className="truncate text-[28px] leading-tight font-bold">{featured.speaker}</p>
+                  <p className="truncate text-[28px] leading-tight font-bold">{presenter.name}</p>
+                  {presenter.profile && <p className="truncate text-[19px] text-sky-100/75">{presenter.profile}</p>}
                 </div>
               </div>
             )}
@@ -302,6 +331,8 @@ export function KajianPanel({ state }: P) {
               // Tiga kartu bertumpuk terlalu pendek untuk semua baris, jadi tempat disembunyikan.
               const compact = others.length >= 3;
               const roomy = others.length === 1;
+              const when = [k.relative ? null : kajianScheduleLabel(k), kajianTimeLabel(k)].filter(Boolean).join(" · ");
+              const p = k.presenter;
               return (
                 <li
                   key={k.id}
@@ -309,10 +340,16 @@ export function KajianPanel({ state }: P) {
                   style={delay(idx + 2)}
                 >
                   <div className="min-w-0">
-                    {(k.schedule || k.time) && (
-                      <p className="flex items-center gap-2.5 text-[19px] font-bold text-gold-400">
-                        <Clock3 className="size-5.5 shrink-0" aria-hidden="true" />
-                        {[k.schedule, k.time].filter(Boolean).join(" · ")}
+                    {(k.relative || when) && (
+                      <p className="flex min-w-0 items-center gap-2.5 text-[19px] font-bold text-gold-400">
+                        {k.relative ? (
+                          <span className="shrink-0 rounded-full bg-gold-400 px-3 py-1 text-[16px] leading-none text-navy-950">
+                            {k.relative}
+                          </span>
+                        ) : (
+                          <Clock3 className="size-5.5 shrink-0" aria-hidden="true" />
+                        )}
+                        <span className="truncate">{when}</span>
                       </p>
                     )}
                     <p
@@ -323,21 +360,29 @@ export function KajianPanel({ state }: P) {
                       {k.title}
                     </p>
                   </div>
-                  {(k.speaker || (!compact && k.location)) && (
+                  {(p || (!compact && k.location)) && (
                     <div className="min-w-0 space-y-1.5">
-                      {k.speaker &&
+                      {p &&
                         (roomy ? (
                           <div className="mb-3 flex items-center gap-4 rounded-[20px] bg-white/8 p-3 pr-5">
-                            <IconTile icon={Mic2} tone="soft" />
+                            {p.photo ? (
+                              <Avatar name={p.name} photo={p.photo} className="size-14 rounded-[16px]" />
+                            ) : (
+                              <IconTile icon={Mic2} tone="soft" />
+                            )}
                             <div className="min-w-0">
                               <p className="text-[16px] font-extrabold tracking-[0.14em] text-sky-200/75 uppercase">Pemateri</p>
-                              <p className="truncate text-[25px] leading-tight font-bold">{k.speaker}</p>
+                              <p className="truncate text-[25px] leading-tight font-bold">{p.name}</p>
                             </div>
                           </div>
                         ) : (
                           <p className="flex items-center gap-2.5 text-[21px] font-medium text-sky-200/85">
-                            <Mic2 className="size-5.5 shrink-0 text-sky-300" aria-hidden="true" />
-                            <span className="truncate">{k.speaker}</span>
+                            {p.photo ? (
+                              <Avatar name={p.name} photo={p.photo} className="size-8 rounded-full" />
+                            ) : (
+                              <Mic2 className="size-5.5 shrink-0 text-sky-300" aria-hidden="true" />
+                            )}
+                            <span className="truncate">{p.name}</span>
                           </p>
                         ))}
                       {!compact && k.location && (
@@ -361,10 +406,11 @@ export function KajianPanel({ state }: P) {
 export function JumatPanel({ state }: P) {
   const [next, ...rest] = state.jumat;
   if (!next) return null;
+  const khatib = next.khatibCard;
   const roles = [
-    { label: "Khatib", value: next.khatib, icon: Mic2 },
-    { label: "Imam", value: next.imam, icon: UserRound },
-    { label: "Muazin", value: next.muadzin, icon: Volume2 },
+    { label: "Khatib", value: khatib?.name ?? next.khatib, icon: Mic2, photo: khatib?.photo ?? null, profile: khatib?.profile ?? "" },
+    { label: "Imam", value: next.imam, icon: UserRound, photo: null, profile: "" },
+    { label: "Muazin", value: next.muadzin, icon: Volume2, photo: null, profile: "" },
   ].filter((r) => r.value);
   return (
     <div className="flex size-full flex-col p-10">
@@ -385,7 +431,7 @@ export function JumatPanel({ state }: P) {
           {rest.slice(0, 2).map((j, idx) => (
             <div key={j.id} className="tile rise rounded-[22px] px-5 py-3.5" style={delay(idx + 2)}>
               <p className="text-[16px] font-extrabold text-gold-400">{formatDateStr(j.date)}</p>
-              <p className="mt-0.5 truncate text-[21px] font-bold">{j.khatib || "Khatib belum diisi"}</p>
+              <p className="mt-0.5 truncate text-[21px] font-bold">{j.khatibCard?.name || "Khatib belum diisi"}</p>
             </div>
           ))}
         </div>
@@ -399,16 +445,17 @@ export function JumatPanel({ state }: P) {
               </div>
             </div>
           )}
-          {roles.map(({ label, value, icon }, idx) => (
+          {roles.map(({ label, value, icon, photo, profile }, idx) => (
             <div
               key={label}
               className="tile rise flex min-h-0 flex-1 items-center gap-5 rounded-[24px] px-6"
               style={delay(idx + 3)}
             >
-              <IconTile icon={icon} />
+              {photo ? <Avatar name={value} photo={photo} className="size-20 rounded-[20px]" /> : <IconTile icon={icon} />}
               <div className="min-w-0">
                 <p className="text-[16px] font-extrabold tracking-[0.14em] text-sky-200/75 uppercase">{label}</p>
                 <p className="mt-1 truncate text-[32px] leading-tight font-bold">{value}</p>
+                {profile && <p className="truncate text-[19px] text-sky-200/70">{profile}</p>}
               </div>
             </div>
           ))}

@@ -3,7 +3,7 @@
 import { useRef, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import { uploadImage } from "./api";
+import { uploadImage, type ImageKind } from "./api";
 
 export function Button({
   variant = "primary",
@@ -103,7 +103,7 @@ export function ImageField({
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
-  kind?: "poster" | "qris" | "logo";
+  kind?: ImageKind;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);

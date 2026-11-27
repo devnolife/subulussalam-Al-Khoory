@@ -1,7 +1,9 @@
 import { DEFAULT_SETTINGS } from "./settings";
 import { computeOfflineTimes } from "./prayer/offline";
-import { addDays, witaDateStr, witaParts } from "./time";
-import { MODULE_TYPES, type DisplayState, type ModuleType } from "./types";
+import { hijriCalendar, hijriParts } from "./hijri";
+import { upcomingIslamicDays } from "./islamic-days";
+import { addDays, witaDateStr, witaParts, witaToMs } from "./time";
+import { MODULE_TYPES, type DisplayState, type DisplayTarawih, type ModuleType, type SpeakerCard } from "./types";
 
 const PHASES = ["normal", "adzan", "doa", "iqamah", "shalat", "emergency"] as const;
 type DemoPhase = (typeof PHASES)[number];
@@ -11,6 +13,23 @@ const PHASE_ELAPSED_MS: Partial<Record<DemoPhase, number>> = {
   iqamah: 5 * 60_000,
   shalat: 11 * 60_000,
 };
+
+const PRESENTER: SpeakerCard = { name: "Ustaz Ahmad (contoh)", profile: "Pengajar tafsir · data contoh", photo: "/demo-avatar.svg" };
+const GUEST: SpeakerCard = { name: "Ustaz Yusuf (contoh)", profile: "", photo: null };
+
+/**
+ * Modul Ramadhan hanya muncul di musimnya. Di luar Ramadhan, demo memakai waktu simulasi:
+ * hari ke-12 Ramadhan berikutnya pukul 15.00 WITA (sebelum berbuka, Idul Fitri < 30 hari lagi).
+ */
+function demoSeason(now: number): { seasonNow?: number; date: string; iedDate: string | null } {
+  const calendar = hijriCalendar(DEFAULT_SETTINGS);
+  const inRamadhan = hijriParts(now, calendar).month === 9;
+  const start = inRamadhan ? null : upcomingIslamicDays(now, calendar, 9).find((d) => d.key === "ramadhan")?.date;
+  const seasonNow = start ? witaToMs(addDays(start, 11), "15:00") : undefined;
+  const at = seasonNow ?? now;
+  const iedDate = upcomingIslamicDays(at, calendar, 9).find((d) => d.key === "idul-fitri")?.date ?? null;
+  return { seasonNow, date: witaDateStr(at), iedDate };
+}
 
 /** Data contoh sepenuhnya terpisah dari database dan bukan informasi masjid sebenarnya. */
 export function createDemoState(now: number, module: string | null, phase: string | null): DisplayState {
@@ -29,9 +48,20 @@ export function createDemoState(now: number, module: string | null, phase: strin
   if (elapsed !== undefined) {
     settings.manualPrayer = { prayer: "dzuhur", startedAt: now - elapsed };
   }
+  const season = demoSeason(now);
+  const tarawih = (offset: number, imam: string, presenter: SpeakerCard | null, theme: string, id: number): DisplayTarawih => ({
+    id,
+    date: addDays(season.date, offset),
+    imam,
+    speaker: presenter?.name ?? "",
+    speakerId: null,
+    theme,
+    presenter,
+  });
+  const kajianBase = { speakerId: null, location: "Ruang utama masjid", active: true, endTime: "", banner: "" };
 
   return {
-    demo: { phase: selectedPhase },
+    demo: { phase: selectedPhase, seasonNow: season.seasonNow },
     settings,
     playlist: MODULE_TYPES.map((type, index) => ({
       id: index + 1, type, durationSec: 20, sort: index, enabled: true, pinned: false,
@@ -41,10 +71,50 @@ export function createDemoState(now: number, module: string | null, phase: strin
       { id: 2, title: "Kegiatan contoh", body: "Silakan menjaga kebersihan dan kerapian masjid.", showTicker: true, showPanel: true, active: true, endsAt: null, sort: 1 },
     ],
     kajian: [
-      { id: 1, title: "Kajian Akhlak dan Kehidupan Kampus", speaker: "Ustaz Ahmad (contoh)", schedule: "Hari ini", time: "Ba'da Maghrib", location: "Ruang utama masjid", active: true, sort: 0 },
-      { id: 2, title: "Tadarus Bersama", speaker: "Pengurus masjid (contoh)", schedule: "Hari ini", time: "Ba'da Isya", location: "Ruang utama masjid", active: true, sort: 1 },
+      {
+        ...kajianBase, id: 1, title: "Kajian Akhlak dan Kehidupan Kampus", speaker: PRESENTER.name, presenter: PRESENTER,
+        recurrence: "weekly", dayOfWeek: day, date: null, startTime: "18:45", schedule: "", time: "Ba'da Maghrib", sort: 0,
+      },
+      {
+        ...kajianBase, id: 2, title: "Tabligh Akbar: Menyambut Bulan Mulia", speaker: GUEST.name, presenter: GUEST,
+        recurrence: "once", dayOfWeek: null, date: addDays(today, 1), startTime: "08:00", endTime: "10:00", schedule: "", time: "", sort: 1,
+      },
+      {
+        ...kajianBase, id: 3, title: "Tahsin Al-Qur'an untuk Pemula", speaker: "Pengurus masjid (contoh)",
+        presenter: { name: "Pengurus masjid (contoh)", profile: "", photo: null },
+        recurrence: "text", dayOfWeek: null, date: null, startTime: "", schedule: "Setiap Ahad pagi", time: "Ba'da Subuh", sort: 2,
+      },
     ],
-    jumat: [{ id: 1, date: friday, khatib: "Ustaz Abdullah (contoh)", imam: "Ustaz Hasan (contoh)", muadzin: "Pengurus (contoh)", theme: "Menjaga amanah" }],
+    jumat: [
+      {
+        id: 1, date: friday, khatib: PRESENTER.name, khatibSpeakerId: null, khatibCard: PRESENTER,
+        imam: "Ustaz Hasan (contoh)", muadzin: "Pengurus (contoh)", theme: "Menjaga amanah",
+      },
+      {
+        id: 2, date: addDays(friday, 7), khatib: GUEST.name, khatibSpeakerId: null, khatibCard: GUEST,
+        imam: "Ustaz Hasan (contoh)", muadzin: "Pengurus (contoh)", theme: "",
+      },
+    ],
+    board: [
+      { id: 1, name: "H. Abdul Karim (contoh)", position: "Ketua", photo: "/demo-avatar.svg", active: true, sort: 0 },
+      { id: 2, name: "Muhammad Rizal (contoh)", position: "Sekretaris", photo: "", active: true, sort: 1 },
+      { id: 3, name: "Siti Aminah (contoh)", position: "Bendahara", photo: "", active: true, sort: 2 },
+      { id: 4, name: "Ahmad Fauzi (contoh)", position: "Seksi Peribadatan", photo: "/demo-avatar.svg", active: true, sort: 3 },
+      { id: 5, name: "Nurul Huda (contoh)", position: "Seksi Pendidikan", photo: "", active: true, sort: 4 },
+      { id: 6, name: "Hasanuddin (contoh)", position: "Seksi Pemeliharaan", photo: "", active: true, sort: 5 },
+    ],
+    tarawih: [
+      tarawih(0, "Ustaz Hasan (contoh)", PRESENTER, "Keutamaan sepuluh malam terakhir", 1),
+      tarawih(1, "Ustaz Abdullah (contoh)", GUEST, "Zakat fitrah dan hikmahnya", 2),
+      tarawih(2, "Ustaz Hasan (contoh)", null, "", 3),
+      tarawih(3, "Ustaz Abdullah (contoh)", PRESENTER, "Menjaga amalan setelah Ramadhan", 4),
+    ],
+    ied: season.iedDate
+      ? [{
+          id: 1, kind: "fitri", date: season.iedDate, time: "07:00", location: "Lapangan depan masjid (contoh)",
+          khatib: "Ustaz Abdullah (contoh)", imam: "Ustaz Hasan (contoh)", note: "Data contoh. Jamaah dianjurkan membawa sajadah.",
+        }]
+      : [],
     finance: {
       balance: 12500000, monthIn: 5000000, monthOut: 2000000,
       monthLabel: "Contoh bulan ini",

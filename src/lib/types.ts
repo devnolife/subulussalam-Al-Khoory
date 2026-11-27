@@ -17,7 +17,20 @@ export const PRAYER_LABELS: Record<PrayerKey, string> = {
 export type PrayerTimes = Record<PrayerKey, string>;
 export type DayTimes = { date: string; times: PrayerTimes; source: "kemenag" | "offline" };
 
-export const MODULE_TYPES = ["kabah", "slides", "kajian", "jumat", "kas", "ayat", "qris", "pengumuman", "haribesar", "donatur"] as const;
+export const MODULE_TYPES = [
+  "kabah",
+  "slides",
+  "kajian",
+  "jumat",
+  "kas",
+  "ayat",
+  "qris",
+  "pengumuman",
+  "haribesar",
+  "donatur",
+  "pengurus",
+  "ramadhan",
+] as const;
 export type ModuleType = (typeof MODULE_TYPES)[number];
 export const MODULE_LABELS: Record<ModuleType, string> = {
   kabah: "Live Ka'bah",
@@ -30,6 +43,8 @@ export const MODULE_LABELS: Record<ModuleType, string> = {
   pengumuman: "Pengumuman",
   haribesar: "Hari Besar Islam",
   donatur: "Donatur & ZISWAF",
+  pengurus: "Pengurus Masjid",
+  ramadhan: "Ramadhan & Hari Raya",
 };
 
 export type PlaylistItem = {
@@ -52,13 +67,43 @@ export type Announcement = {
   sort: number;
 };
 
+export type Speaker = {
+  id: number;
+  name: string;
+  /** Profil singkat, mis. "Dosen Fakultas Agama Islam". */
+  profile: string;
+  photo: string;
+  active: boolean;
+  sort: number;
+};
+
+/** Pemateri siap tampil: dari daftar pembicara bila terhubung, atau nama yang diketik manual. */
+export type SpeakerCard = { name: string; profile: string; photo: string | null };
+
+/** weekly = rutin tiap pekan, once = sekali pada tanggal tertentu, text = jadwal teks bebas (data lama). */
+export const KAJIAN_RECURRENCES = ["weekly", "once", "text"] as const;
+export type KajianRecurrence = (typeof KAJIAN_RECURRENCES)[number];
+
 export type Kajian = {
   id: number;
   title: string;
+  /** Nama pemateri; bila `speakerId` terisi, berisi salinan nama dari daftar pembicara. */
   speaker: string;
+  speakerId: number | null;
+  recurrence: KajianRecurrence;
+  /** 0 = Ahad … 6 = Sabtu (untuk kajian rutin). */
+  dayOfWeek: number | null;
+  /** Tanggal kajian sekali ("YYYY-MM-DD"). */
+  date: string | null;
+  /** "HH:MM" WITA, boleh kosong. */
+  startTime: string;
+  endTime: string;
+  /** Jadwal teks bebas (kajian lama). */
   schedule: string;
+  /** Keterangan waktu, mis. "Ba'da Maghrib". */
   time: string;
   location: string;
+  banner: string;
   active: boolean;
   sort: number;
 };
@@ -67,9 +112,45 @@ export type Jumat = {
   id: number;
   date: string;
   khatib: string;
+  khatibSpeakerId: number | null;
   imam: string;
   muadzin: string;
   theme: string;
+};
+
+export type BoardMember = {
+  id: number;
+  name: string;
+  position: string;
+  photo: string;
+  active: boolean;
+  sort: number;
+};
+
+/** Petugas tarawih pada malam tanggal `date` (malam sebelum hari puasa berikutnya). */
+export type Tarawih = {
+  id: number;
+  date: string;
+  imam: string;
+  speaker: string;
+  speakerId: number | null;
+  theme: string;
+};
+
+export const IED_KINDS = ["fitri", "adha"] as const;
+export type IedKind = (typeof IED_KINDS)[number];
+export const IED_LABELS: Record<IedKind, string> = { fitri: "Idul Fitri", adha: "Idul Adha" };
+
+export type Ied = {
+  id: number;
+  kind: IedKind;
+  date: string;
+  /** "HH:MM" WITA. */
+  time: string;
+  location: string;
+  khatib: string;
+  imam: string;
+  note: string;
 };
 
 export const ZISWAF_KINDS = ["zakat", "infaq", "sedekah", "wakaf"] as const;
@@ -185,13 +266,27 @@ export type AdminSummary = {
   };
 };
 
+export type DisplayKajian = Kajian & { presenter: SpeakerCard | null };
+export type DisplayJumat = Jumat & { khatibCard: SpeakerCard | null };
+export type DisplayTarawih = Tarawih & { presenter: SpeakerCard | null };
+
 export type DisplayState = {
-  demo?: { phase: "normal" | "adzan" | "doa" | "iqamah" | "shalat" | "emergency" };
+  demo?: {
+    phase: "normal" | "adzan" | "doa" | "iqamah" | "shalat" | "emergency";
+    /** Waktu simulasi untuk modul musiman (Ramadhan) agar contoh tetap bisa dilihat di luar musimnya. */
+    seasonNow?: number;
+  };
   settings: Omit<Settings, never>;
   playlist: PlaylistItem[];
   announcements: Announcement[];
-  kajian: Kajian[];
-  jumat: Jumat[];
+  /** Kajian aktif; kajian sekali yang tanggalnya sudah lewat tidak dikirim. */
+  kajian: DisplayKajian[];
+  jumat: DisplayJumat[];
+  board: BoardMember[];
+  /** Petugas tarawih mulai malam ini. */
+  tarawih: DisplayTarawih[];
+  /** Sholat Ied mulai hari ini. */
+  ied: Ied[];
   finance: FinanceSummary;
   verse: Verse | null;
   slides: Slide[];

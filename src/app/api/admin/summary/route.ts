@@ -33,7 +33,7 @@ export async function GET() {
           query<{ announcements: number; kajian: number; slides: number }>(
             `SELECT
                (SELECT count(*)::int FROM announcements WHERE active AND (ends_at IS NULL OR ends_at >= $1::date)) AS announcements,
-               (SELECT count(*)::int FROM kajian WHERE active) AS kajian,
+               (SELECT count(*)::int FROM kajian WHERE active AND (recurrence <> 'once' OR date IS NULL OR date >= $1::date)) AS kajian,
                (SELECT count(*)::int FROM slides WHERE active) AS slides`,
             [today],
           ),

@@ -123,3 +123,35 @@ export function StarOrnament({ className = "" }: { className?: string }) {
     </svg>
   );
 }
+
+const HONORIFIC = /^(ustadzah|ustadz|ustazah|ustaz|ust|kh|hj|h|dr|drs|prof|ir)\.?\s+/i;
+
+/** Dua huruf awal nama tanpa gelar, mis. "Ustadz Ahmad Fauzi" → "AF". */
+export function initials(name: string): string {
+  let rest = name.trim();
+  for (let prev = ""; prev !== rest; ) {
+    prev = rest;
+    rest = rest.replace(HONORIFIC, "");
+  }
+  const words = rest.split(/[\s,]+/).filter((w) => /^\p{L}/u.test(w));
+  return words
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("");
+}
+
+/** Foto orang, atau inisial bila belum ada foto. Ukuran dan sudut diatur lewat className. */
+export function Avatar({ name, photo, className = "" }: { name: string; photo: string | null; className?: string }) {
+  if (photo) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={photo} alt="" className={`shrink-0 bg-navy-900 object-cover ${className}`} />;
+  }
+  return (
+    <span
+      className={`grid shrink-0 place-items-center bg-white/10 font-extrabold text-gold-400 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)] ${className}`}
+      aria-hidden="true"
+    >
+      {initials(name)}
+    </span>
+  );
+}

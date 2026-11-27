@@ -14,6 +14,10 @@ const RESOURCE_LABELS: Record<string, string> = {
   finance_categories: "kategori kas",
   verses: "ayat/hadis",
   slides: "poster",
+  speakers: "pembicara",
+  board_members: "pengurus",
+  tarawih: "petugas tarawih",
+  ied: "sholat Ied",
   playlist: "urutan tampilan",
 };
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, CalendarDays, ChevronRight, Images, Megaphone, ScrollText, Wallet } from "lucide-react";
+import { BookOpen, CalendarDays, ChevronRight, Images, Megaphone, Mic2, MoonStar, ScrollText, Sparkles, UsersRound, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/admin/ui";
 import { IconTile } from "@/components/display/ui";
 import { currentUser } from "@/lib/auth";
@@ -8,7 +8,11 @@ import { can, routePermission } from "@/lib/permissions";
 const ITEMS = [
   { href: "/admin/pengumuman", label: "Pengumuman", desc: "Teks berjalan dan informasi", icon: Megaphone },
   { href: "/admin/kajian", label: "Jadwal kajian", desc: "Kegiatan dan pemateri", icon: BookOpen },
+  { href: "/admin/pembicara", label: "Pembicara", desc: "Ustadz, khatib, dan fotonya", icon: Mic2 },
   { href: "/admin/jumat", label: "Petugas Jumat", desc: "Khatib, imam, dan muazin", icon: CalendarDays },
+  { href: "/admin/tarawih", label: "Petugas tarawih", desc: "Imam dan penceramah Ramadhan", icon: MoonStar },
+  { href: "/admin/ied", label: "Sholat Ied", desc: "Idul Fitri dan Idul Adha", icon: Sparkles },
+  { href: "/admin/pengurus", label: "Pengurus", desc: "Susunan pengurus masjid", icon: UsersRound },
   { href: "/admin/kas", label: "Kas dan infak", desc: "Pemasukan dan pengeluaran", icon: Wallet },
   { href: "/admin/ayat", label: "Ayat dan hadis", desc: "Renungan harian", icon: ScrollText },
   { href: "/admin/slide", label: "Poster", desc: "Gambar kegiatan", icon: Images },

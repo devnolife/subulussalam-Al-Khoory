@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CrudPage } from "@/components/admin/CrudPage";
+import { linkSpeaker, speakerName, speakerOptions } from "@/components/admin/speakers";
 import { addDays, formatDateStr, witaDateStr, witaParts } from "@/lib/time";
 import type { Jumat } from "@/lib/types";
 
@@ -18,20 +19,29 @@ export default function JumatAdmin() {
       resource="jumat"
       title="Petugas Jum'at"
       description="Khatib, imam, dan muadzin. Hanya jadwal mendatang yang tampil di layar."
-      defaults={() => ({ date: nextFriday(), khatib: "", imam: "", muadzin: "", theme: "" })}
+      lookups={["speakers"]}
+      defaults={() => ({ date: nextFriday(), khatibSpeakerId: "", khatib: "", imam: "", muadzin: "", theme: "" })}
       fields={[
         { name: "date", label: "Tanggal", type: "date" },
-        { name: "khatib", label: "Khatib", type: "text" },
+        {
+          name: "khatibSpeakerId",
+          label: "Khatib",
+          type: "select",
+          options: speakerOptions("khatibSpeakerId"),
+          help: "Pilih dari daftar Pembicara agar foto khatib tampil di layar.",
+        },
+        { name: "khatib", label: "Nama khatib", type: "text", show: (r) => !r.khatibSpeakerId },
         { name: "imam", label: "Imam", type: "text" },
         { name: "muadzin", label: "Muadzin", type: "text" },
         { name: "theme", label: "Tema khutbah (opsional)", type: "text" },
       ]}
-      renderItem={(j) => (
+      prepare={(p, lookups) => linkSpeaker(p, lookups, "khatibSpeakerId", "khatib")}
+      renderItem={(j, lookups) => (
         <>
           <p className={`text-sm font-semibold ${j.date < today ? "text-white/40" : "text-gold-400"}`}>
             {formatDateStr(j.date)}
           </p>
-          <p className="font-semibold">Khatib: {j.khatib || "-"}</p>
+          <p className="font-semibold">Khatib: {speakerName(lookups, j.khatibSpeakerId, j.khatib) || "-"}</p>
           <p className="text-sm text-white/60">
             Imam: {j.imam || "-"} · Muadzin: {j.muadzin || "-"}
           </p>
