@@ -615,7 +615,7 @@ export function QrisPanel({ state }: P) {
   return (
     <div className="flex size-full items-center gap-12 p-10">
       {q.image && (
-        <div className="rise flex h-full shrink-0 flex-col items-center justify-center rounded-[32px] bg-white px-7 pt-7 pb-5 shadow-[0_32px_64px_-32px_rgb(0_0_0/0.9)]">
+        <div className="rise flex h-full shrink-0 flex-col items-center justify-center rounded-[32px] bg-white px-7 pt-7 pb-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={q.image} alt="Kode QRIS untuk donasi masjid" className="h-[430px] w-auto object-contain" />
           <p className="mt-3 flex items-center gap-2 text-[18px] font-extrabold tracking-[0.18em] text-navy-950 uppercase">

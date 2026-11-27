@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-type TileTone = "brand" | "zamrud" | "ungu" | "bata" | "gold" | "soft";
+export type TileTone = "brand" | "zamrud" | "ungu" | "bata" | "gold" | "soft";
 type TileSize = "sm" | "md" | "lg" | "xl";
 
 const TILE_TONE: Record<TileTone, string> = {

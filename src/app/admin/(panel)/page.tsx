@@ -149,11 +149,11 @@ export default function RemotePage() {
 
       <Card className="space-y-3">
         <h2 className="flex items-center gap-3 font-bold">
-          <IconTile icon={BellRing} tone="gold" size="sm" /> Pengumuman darurat
+          <IconTile icon={BellRing} tone="bata" size="sm" /> Pengumuman darurat
         </h2>
         {settings?.emergency.active ? (
           <>
-            <p className="rounded-2xl bg-gold-400/10 p-3 text-sm whitespace-pre-line text-gold-300 ring-1 ring-gold-400/30">{settings.emergency.text}</p>
+            <p className="rounded-2xl bg-bata-700/35 p-3 text-sm whitespace-pre-line text-bata-200 ring-1 ring-bata-400/40">{settings.emergency.text}</p>
             <Button
               variant="danger"
               className="w-full"

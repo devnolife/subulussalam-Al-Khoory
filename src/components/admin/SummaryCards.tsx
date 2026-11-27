@@ -10,13 +10,13 @@ import type { AdminSummary } from "@/lib/types";
 import { api } from "./api";
 import { useAdminUser } from "./AdminUser";
 
-function Stat({ href, icon: Icon, label, value }: { href: string; icon: LucideIcon; label: string; value: number }) {
+function Stat({ href, icon: Icon, label, value, color }: { href: string; icon: LucideIcon; label: string; value: number; color: string }) {
   return (
     <Link
       href={href}
       className="card flex flex-col gap-1 rounded-[20px] px-3 py-3 transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.97]"
     >
-      <Icon className="size-4.5 text-gold-400" aria-hidden="true" />
+      <Icon className={`size-4.5 ${color}`} aria-hidden="true" />
       <span className="text-2xl leading-none font-extrabold tabular-nums">{value}</span>
       <span className="text-xs text-white/55">{label}</span>
     </Link>
@@ -52,7 +52,7 @@ export function SummaryCards() {
           href="/admin/kas"
           className="card-zamrud relative block overflow-hidden rounded-[24px] p-4 transition-[scale] duration-150 active:scale-[0.98]"
         >
-         <p className="relative flex items-center gap-2 text-sm font-bold text-sky-100">
+          <p className="relative flex items-center gap-2 text-sm font-bold text-sky-100">
             <Wallet className="size-4 text-gold-400" aria-hidden="true" /> Saldo kas
             <ChevronRight className="ml-auto size-4 text-white/40" aria-hidden="true" />
           </p>
@@ -69,15 +69,15 @@ export function SummaryCards() {
       {content && (
         <>
           <div className="grid grid-cols-3 gap-3">
-            <Stat href="/admin/pengumuman" icon={Megaphone} label="Pengumuman aktif" value={content.announcements} />
-            <Stat href="/admin/kajian" icon={BookOpen} label="Kajian aktif" value={content.kajian} />
-            <Stat href="/admin/slide" icon={Images} label="Slide aktif" value={content.slides} />
+            <Stat href="/admin/pengumuman" icon={Megaphone} label="Pengumuman aktif" value={content.announcements} color="text-bata-400" />
+            <Stat href="/admin/kajian" icon={BookOpen} label="Kajian aktif" value={content.kajian} color="text-royal-400" />
+            <Stat href="/admin/slide" icon={Images} label="Slide aktif" value={content.slides} color="text-gold-400" />
           </div>
           <Link
             href="/admin/jumat"
             className="card flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.98]"
           >
-            <Mic className="size-5 shrink-0 text-gold-400" aria-hidden="true" />
+            <Mic className="size-5 shrink-0 text-royal-400" aria-hidden="true" />
             <span className="min-w-0 flex-1">
               <span className="block font-bold">Jumat berikutnya</span>
               <span className="block truncate text-white/55">

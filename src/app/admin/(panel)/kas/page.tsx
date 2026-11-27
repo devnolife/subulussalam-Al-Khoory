@@ -131,7 +131,7 @@ export default function KasAdmin() {
         return (
           <div className="mb-4 space-y-3">
             <Card className="card-zamrud relative overflow-hidden">
-             <p className="relative text-sm font-bold text-sky-100">Saldo kas saat ini</p>
+              <p className="relative text-sm font-bold text-sky-100">Saldo kas saat ini</p>
               <p className="relative mt-1 text-3xl font-extrabold tracking-[-0.02em] tabular-nums">{rupiah(balance)}</p>
               <p className="relative mt-2 text-sm text-sky-100/80 tabular-nums">
                 Bulan ini <span className="font-bold text-white">+{rupiah(sum("in"))}</span> ·{" "}
