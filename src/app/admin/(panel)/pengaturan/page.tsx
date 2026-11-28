@@ -41,7 +41,7 @@ function NumberGrid<K extends string>({
   suffix: string;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       {keys.map((k) => (
         <Field key={k} label={`${labels[k]} (${suffix})`}>
           <TextInput
@@ -59,15 +59,28 @@ function NumberGrid<K extends string>({
 export default function PengaturanPage() {
   const { role } = useAdminUser();
   const manage = can(role, "settings");
+  const account = (
+    <>
+      <AccountSection />
+      <AdminLinks />
+    </>
+  );
   return (
-    <div className="space-y-3">
+    <div className={manage ? undefined : "max-w-2xl"}>
       <PageHeader
         title="Pengaturan"
         description={manage ? "Akun, identitas masjid, waktu sholat, dan lainnya." : "Akun Anda di panel pengurus."}
       />
-      <AccountSection />
-      <AdminLinks />
-      {manage && <MosqueSettings />}
+      {manage ? (
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-[22rem_minmax(0,1fr)] xl:items-start xl:gap-5">
+          <div className="space-y-3">{account}</div>
+          <div className="min-w-0 space-y-3">
+            <MosqueSettings />
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">{account}</div>
+      )}
     </div>
   );
 }
@@ -118,7 +131,7 @@ function MosqueSettings() {
 
   return (
     <>
-      <h2 className="px-1 pt-4 text-sm font-bold tracking-wide text-sky-200/70 uppercase">Pengaturan masjid</h2>
+      <h2 className="px-1 pt-4 text-sm font-bold tracking-wide text-sky-200/70 uppercase xl:pt-0">Pengaturan masjid</h2>
 
       <Section title="Identitas Masjid" desc="Nama, logo, dan alamat di header layar">
         <Field label="Nama masjid">
@@ -155,7 +168,7 @@ function MosqueSettings() {
         {!backupOk && s.kabah.backupUrl && <p className="text-sm text-rose-300">URL cadangan tidak dikenali.</p>}
         <div>
           <Toggle label="Putar suara siaran" checked={s.kabah.sound} onChange={(v) => patch("kabah", { sound: v })} />
-          <p className="text-xs text-white/45">
+          <p className="text-xs text-muted">
             Suara berhenti otomatis saat azan, iqamah, sholat, dan pengumuman darurat. Bila browser TV menahan suara,
             ketuk layar atau tekan tombol apa saja sekali.
           </p>
@@ -243,7 +256,10 @@ function MosqueSettings() {
             </p>
           </div>
           {s.hijriMonths.map((m, i) => (
-            <div key={i} className="grid grid-cols-[1fr_5.5rem] gap-2 rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/[0.06]">
+            <div
+              key={i}
+              className="grid grid-cols-[1fr_5.5rem] gap-2 rounded-xl bg-white/[0.03] p-3 ring-1 ring-white/[0.06] sm:grid-cols-[minmax(0,1fr)_5.5rem_minmax(0,1fr)_auto]"
+            >
               <Field label="Bulan">
                 <Select
                   value={String(m.month)}

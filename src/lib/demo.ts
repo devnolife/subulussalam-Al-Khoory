@@ -1,4 +1,5 @@
 import { DEFAULT_SETTINGS } from "./settings";
+import { defaultDisplay } from "./displays";
 import { computeOfflineTimes } from "./prayer/offline";
 import { hijriCalendar, hijriParts } from "./hijri";
 import { upcomingIslamicDays } from "./islamic-days";
@@ -39,7 +40,7 @@ export function createDemoState(now: number, module: string | null, phase: strin
   const selected: ModuleType = MODULE_TYPES.find((item) => item === module) ?? "kajian";
   const selectedPhase: DemoPhase = PHASES.find((item) => item === phase) ?? "normal";
   const settings = structuredClone(DEFAULT_SETTINGS);
-  settings.override = { type: selected, until: null };
+  const display = { ...defaultDisplay(1), override: { type: selected, until: null } };
   settings.qris.note = "Contoh tampilan donasi — bukan QRIS atau rekening asli";
   settings.qris.image = "/demo-qris.svg";
   settings.emergency = { active: selectedPhase === "emergency", text: "SIMULASI: Pengumuman darurat dari pengurus masjid." };
@@ -63,6 +64,8 @@ export function createDemoState(now: number, module: string | null, phase: strin
   return {
     demo: { phase: selectedPhase, seasonNow: season.seasonNow },
     settings,
+    display,
+    camera: null,
     playlist: MODULE_TYPES.map((type, index) => ({
       id: index + 1, type, durationSec: 20, sort: index, enabled: true, pinned: false,
     })),

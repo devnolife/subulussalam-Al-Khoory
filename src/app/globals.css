@@ -3,29 +3,36 @@
 @theme {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-arabic: var(--font-amiri), "Traditional Arabic", serif;
+  --font-display: var(--font-amiri), Georgia, serif;
 
-  /* Identitas Unismuh Makassar (unismuh.ac.id): biru #1D1CE5 dan kuning #FFEE37 */
-  --color-navy-950: #050822;
-  --color-navy-900: #0a0f33;
-  --color-navy-800: #111849;
-  --color-navy-700: #1b2466;
-  --color-royal-700: #1514b8;
+  /* Biru dan kuning situs Unismuh dipertahankan pada aksi utama dan fokus keyboard. */
+  --color-navy-950: #0b1c29;
+  --color-navy-900: #142836;
+  --color-navy-800: #223a49;
+  --color-navy-700: #2d495a;
+  --color-line: #365566;
+  --color-foreground: #f4f4e9;
+  --color-muted: #b8cbd1;
+  --color-control-stroke: #718994;
+  --color-focus: #ffee37;
+  --color-royal-700: #203f9f;
   --color-royal-600: #1d1ce5;
   --color-royal-500: #4544ee;
-  --color-royal-400: #7473f4;
-  --color-sky-300: #c4d9ff;
-  --color-sky-200: #e1ebff;
-  --color-gold-300: #fff48a;
-  --color-gold-400: #ffee37;
-  --color-gold-500: #e6d41f;
+  --color-royal-400: #a7afff;
+  --color-royal-200: #d3d9ff;
+  --color-sky-300: #c9d8db;
+  --color-sky-200: #e4edeb;
+  --color-gold-300: #ffdf9a;
+  --color-gold-400: #f2c56c;
+  --color-gold-500: #cca153;
 
   /* Warna peran (lihat DESIGN.md): zamrud = keuangan & ZISWAF, ungu = kalender & musim, bata = pengumuman & bahaya */
-  --color-zamrud-200: #c8f2df;
-  --color-zamrud-300: #8fe3bf;
-  --color-zamrud-400: #4fd19b;
-  --color-zamrud-600: #0d8a5f;
-  --color-zamrud-700: #0b6e4d;
-  --color-zamrud-800: #0a5139;
+  --color-zamrud-200: #c4e4d5;
+  --color-zamrud-300: #91e5ce;
+  --color-zamrud-400: #55cfb8;
+  --color-zamrud-600: #247368;
+  --color-zamrud-700: #0e6054;
+  --color-zamrud-800: #0c433c;
   --color-ungu-200: #eadcff;
   --color-ungu-300: #d4bcff;
   --color-ungu-600: #6a3fb8;
@@ -39,11 +46,11 @@
   --color-bata-800: #7a2f17;
 
   /* Pemasukan/pengeluaran memakai keluarga zamrud dan bata agar satu bahasa warna. */
-  --color-emerald-100: #e3f9ef;
+  --color-emerald-100: #e0ede1;
   --color-emerald-200: var(--color-zamrud-200);
   --color-emerald-300: var(--color-zamrud-300);
   --color-emerald-400: var(--color-zamrud-400);
-  --color-emerald-500: #1fb07a;
+  --color-emerald-500: #3ea898;
   --color-emerald-600: var(--color-zamrud-600);
   --color-rose-100: #fff0ea;
   --color-rose-200: var(--color-bata-200);
@@ -62,7 +69,7 @@
 
   body {
     background: var(--color-navy-950);
-    color: #f5f7ff;
+    color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
@@ -74,7 +81,7 @@
 
   /* Di layer base agar utilitas seperti outline-none tetap bisa menimpanya. */
   :focus-visible {
-    outline: 2px solid var(--color-gold-400);
+    outline: 2px solid var(--color-focus);
     outline-offset: 3px;
   }
 }
@@ -85,16 +92,81 @@
     background-color: var(--color-navy-950);
   }
 
-  /* Pola bintang delapan (khatam), hanya untuk layar penuh adzan/doa/iqamah. */
-  .pattern {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='112' viewBox='0 0 112 112'%3E%3Cg fill='none' stroke='white' stroke-opacity='0.045' stroke-width='1.2'%3E%3Crect x='30.5' y='30.5' width='51' height='51'/%3E%3Crect x='30.5' y='30.5' width='51' height='51' transform='rotate(45 56 56)'/%3E%3Ccircle cx='56' cy='56' r='9'/%3E%3Cpath d='M0 0 30.5 30.5M112 0 81.5 30.5M0 112 30.5 81.5M112 112 81.5 81.5'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 112px 112px;
+  /* Permukaan netral: isi polos + satu garis tepi, tanpa bayangan. */
+  .card,
+  .panel-box {
+    background-color: var(--color-navy-900);
+    box-shadow: inset 0 0 0 1px var(--color-line);
   }
 
-  /* Permukaan netral: isi polos + satu garis tepi, tanpa bayangan. */
-  .card {
-    background-color: var(--color-navy-900);
-    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  .panel-box {
+    @apply rounded-2xl p-4 sm:p-5;
+  }
+
+  .panel-heading {
+    @apply text-lg leading-tight font-bold tracking-tight;
+  }
+
+  .field-control {
+    @apply min-h-11 w-full rounded-lg border border-control-stroke bg-navy-950 px-3.5 py-2.5 text-base text-white placeholder:text-muted focus-visible:border-focus;
+  }
+
+  .mosque-cover-image {
+    position: absolute;
+    inset: 0;
+  }
+
+  .photo-caption {
+    --caption-fade: clamp(2.5rem, 8vw, 6rem);
+    align-self: end;
+    position: relative;
+    isolation: isolate;
+    color: var(--color-foreground);
+  }
+
+  .photo-caption::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    background: var(--color-royal-700);
+  }
+
+  /* Bagian transparan selalu di luar teks, termasuk saat judul atau alamat membungkus. */
+  @supports (color: color-mix(in srgb, black, transparent)) {
+    .photo-caption::before {
+      inset: var(--caption-inset, calc(0px - var(--caption-fade)) 0 0);
+      background: linear-gradient(
+        var(--caption-direction, to top),
+        var(--color-royal-700) var(--caption-solid, 0%),
+        color-mix(in srgb, var(--color-navy-950) 86%, transparent) calc(100% - var(--caption-fade)),
+        transparent
+      );
+    }
+  }
+
+  .channel-strip {
+    @apply grid divide-x divide-royal-400 border-t border-royal-400 bg-royal-700 text-white;
+  }
+
+  .channel-link {
+    @apply flex min-h-14 items-center justify-between gap-2 px-3 py-3 text-base font-semibold transition-colors duration-150 hover:bg-royal-600 focus-visible:-outline-offset-4 sm:min-h-20 sm:px-7 sm:text-xl;
+  }
+
+  .channel-link svg {
+    @apply size-4 shrink-0 text-royal-200 sm:size-5;
+  }
+
+  @media (forced-colors: active) {
+    .photo-caption {
+      color: CanvasText;
+    }
+
+    .photo-caption::before {
+      inset: 0;
+      background: Canvas;
+    }
   }
 
   /*
@@ -102,7 +174,7 @@
    * jadi variabel sky di-tint ulang mengikuti warna kartu agar tidak abu-abu.
    */
   .card-brand {
-    background-color: var(--color-royal-600);
+    background-color: var(--color-royal-700);
   }
 
   .card-zamrud {
@@ -144,6 +216,25 @@
     outline-offset: -3px;
   }
 }
+
+@utility cover-spread {
+  & > .mosque-cover-image {
+    inset-inline-start: 22%;
+  }
+
+  & > .photo-caption {
+    --caption-direction: to right;
+    --caption-solid: 35%;
+    --caption-fade: var(--spread-fade, clamp(5rem, 13vw, 12rem));
+    --caption-inset: 0 calc(0px - var(--caption-fade)) 0 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: var(--spread-width, 52%);
+  }
+}
+
 @keyframes ticker {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -153,19 +244,11 @@
 }
 
 @keyframes panel-in {
-  from { opacity: 0; transform: translateY(14px) scale(0.985); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .animate-panel-in {
-  animation: panel-in 600ms cubic-bezier(0.2, 0, 0, 1) both;
-}
-
-@keyframes rise {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: none; }
-}
-.rise {
-  animation: rise 700ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation: panel-in 180ms ease-out both;
 }
 
 @keyframes soft-pulse {
@@ -176,14 +259,6 @@
   animation: soft-pulse 2.4s ease-in-out infinite;
 }
 
-@keyframes ripple {
-  from { transform: scale(1); opacity: 0.7; }
-  to { transform: scale(2.4); opacity: 0; }
-}
-.animate-ripple {
-  animation: ripple 3.6s cubic-bezier(0.2, 0, 0, 1) infinite;
-}
-
 @keyframes progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
@@ -192,9 +267,7 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
   .animate-panel-in,
-  .rise,
-  .animate-soft-pulse,
-  .animate-ripple {
+  .animate-soft-pulse {
     animation: none;
   }
 }

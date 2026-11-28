@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   BookOpenText,
   CalendarDays,
@@ -8,7 +8,6 @@ import {
   MapPin,
   Mic2,
   MoonStar,
-  Sparkles,
   Sunrise,
   Sunset,
   UserRound,
@@ -18,9 +17,8 @@ import { IED_LABELS, type DisplayTarawih } from "@/lib/types";
 import type { FastingDay, NightTarawih, RamadhanView } from "@/lib/ramadhan";
 import { formatDateStr, formatGregorian, witaToMs } from "@/lib/time";
 import { WEEKDAYS, weekdayOf } from "@/lib/kajian";
-import { Avatar, Chip, IconTile, PanelHeader } from "./ui";
+import { Avatar, IconTile, PanelHeader } from "./ui";
 
-const delay = (step: number): CSSProperties => ({ animationDelay: `${step * 100}ms` });
 const countdown = (days: number) => (days === 0 ? "Hari ini" : days === 1 ? "Besok" : `${days} hari lagi`);
 const dayDate = (date: string) => `${WEEKDAYS[weekdayOf(date)]}, ${formatDateStr(date)}`;
 
@@ -35,11 +33,11 @@ function FastingCard({ fasting, now }: { fasting: FastingDay; now: number }) {
   const left = witaToMs(fasting.date, fasting.maghrib) - now;
   const today = fasting.when === "today";
   return (
-    <article className="card-ungu rise relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8" style={delay(1)}>
+    <article className="card-ungu relative flex min-h-0 flex-col justify-between overflow-hidden rounded-[28px] p-8">
       <div className="relative">
-        <Chip icon={MoonStar} tone="gold">
+        <h3 className="text-[30px] font-bold">
           {today ? `Puasa hari ke-${fasting.day}` : `Besok puasa hari ke-${fasting.day}`}
-        </Chip>
+        </h3>
         <p className="mt-4 text-[26px] font-semibold text-sky-100/85">{formatGregorian(witaToMs(fasting.date, "12:00"))}</p>
       </div>
       <div className="relative grid grid-cols-2 gap-4">
@@ -113,14 +111,13 @@ function Line({ icon: Icon, children, className = "" }: { icon: LucideIcon; chil
   );
 }
 
-function TarawihCard({ t, step, variant }: { t: NightTarawih<DisplayTarawih>; step: number; variant: Variant }) {
+function TarawihCard({ t, variant }: { t: NightTarawih<DisplayTarawih>; variant: Variant }) {
   const compact = variant === "compact";
   return (
     <div
-      className={`rise flex min-h-0 flex-col overflow-hidden rounded-[28px] ${
+      className={`flex min-h-0 flex-col overflow-hidden rounded-[28px] ${
         compact ? "tile flex-auto justify-center gap-2.5 px-7 py-6" : "card-ungu relative justify-center gap-4 p-8"
       }`}
-      style={delay(step)}
     >
       <p className={`flex items-center gap-3 font-extrabold text-gold-400 ${compact ? "text-[20px]" : "text-[22px]"}`}>
         <MoonStar className="size-6" aria-hidden="true" />
@@ -152,14 +149,12 @@ function TarawihCard({ t, step, variant }: { t: NightTarawih<DisplayTarawih>; st
 
 type IedInfo = NonNullable<RamadhanView<DisplayTarawih>["ied"]>;
 
-function IedCompact({ ied, step }: { ied: IedInfo; step: number }) {
+function IedCompact({ ied }: { ied: IedInfo }) {
   return (
-    <div className="tile rise flex min-h-0 flex-auto flex-col justify-center gap-3 overflow-hidden rounded-[28px] px-7 py-6" style={delay(step)}>
+    <div className="tile flex min-h-0 flex-auto flex-col justify-center gap-3 overflow-hidden rounded-[28px] px-7 py-6">
       <div className="flex min-w-0 items-center gap-3">
-        <Chip icon={Sparkles} tone="gold">
-          {countdown(ied.daysLeft)}
-        </Chip>
         <p className="truncate text-[24px] font-extrabold">Sholat {IED_LABELS[ied.kind]}</p>
+        <span className="shrink-0 text-[20px] font-semibold text-gold-300">{countdown(ied.daysLeft)}</span>
       </div>
       <div className="flex flex-col gap-1 text-[20px] text-sky-100/85">
         <Line icon={CalendarDays} className="font-semibold text-sky-50">
@@ -182,15 +177,13 @@ function IedCompact({ ied, step }: { ied: IedInfo; step: number }) {
   );
 }
 
-function IedCard({ ied, step, variant }: { ied: IedInfo; step: number; variant: Variant }) {
-  if (variant === "compact") return <IedCompact ied={ied} step={step} />;
+function IedCard({ ied, variant }: { ied: IedInfo; variant: Variant }) {
+  if (variant === "compact") return <IedCompact ied={ied} />;
   return (
-    <div className="card-ungu rise relative flex min-h-0 flex-col justify-between gap-4 overflow-hidden rounded-[28px] p-8" style={delay(step)}>
+    <div className="card-ungu relative flex min-h-0 flex-col justify-between gap-4 overflow-hidden rounded-[28px] p-8">
       <div className="relative">
-        <Chip icon={Sparkles} tone="gold">
-          {countdown(ied.daysLeft)}
-        </Chip>
-        <h3 className="mt-6 text-[56px] leading-[1.05] font-extrabold tracking-[-0.025em]">Sholat {IED_LABELS[ied.kind]}</h3>
+        <h3 className="text-[56px] leading-[1.05] font-bold tracking-tight">Sholat {IED_LABELS[ied.kind]}</h3>
+        <p className="mt-2 text-[22px] font-semibold text-gold-300">{countdown(ied.daysLeft)}</p>
         <Line icon={CalendarDays} className="mt-4 text-[28px] font-semibold text-sky-100/90">
           {dayDate(ied.date)}
           {ied.time ? ` · ${ied.time} WITA` : ""}
@@ -220,9 +213,9 @@ function IedCard({ ied, step, variant }: { ied: IedInfo; step: number; variant: 
   );
 }
 
-function UpcomingList({ items, step }: { items: NightTarawih<DisplayTarawih>[]; step: number }) {
+function UpcomingList({ items }: { items: NightTarawih<DisplayTarawih>[] }) {
   return (
-    <div className="tile rise flex min-h-0 flex-auto flex-col rounded-[28px] px-7 pt-6 pb-2" style={delay(step)}>
+    <div className="tile flex min-h-0 flex-auto flex-col rounded-[28px] px-7 pt-6 pb-2">
       <p className="flex items-center gap-3 text-[22px] font-extrabold text-gold-400">
         <Clock3 className="size-6" aria-hidden="true" />
         Petugas tarawih berikutnya
@@ -261,34 +254,26 @@ export function RamadhanPanel({ view, now }: { view: RamadhanView<DisplayTarawih
   if (!main) return null;
   const wide = side.length === 0;
 
-  const render = (block: Block, step: number, variant: Variant): ReactNode => {
+  const render = (block: Block, variant: Variant): ReactNode => {
     switch (block) {
       case "fasting":
         return fasting && <FastingCard key={block} fasting={fasting} now={now} />;
       case "tonight":
-        return tonight && <TarawihCard key={block} t={tonight} step={step} variant={variant} />;
+        return tonight && <TarawihCard key={block} t={tonight} variant={variant} />;
       case "ied":
-        return ied && <IedCard key={block} ied={ied} step={step} variant={variant} />;
+        return ied && <IedCard key={block} ied={ied} variant={variant} />;
       case "upcoming":
-        return <UpcomingList key={block} items={upcoming.slice(0, tonight ? 2 : 3)} step={step} />;
+        return <UpcomingList key={block} items={upcoming.slice(0, tonight ? 2 : 3)} />;
     }
   };
 
   const title = view.ramadhanYear ? `Ramadhan ${view.ramadhanYear} H` : ied ? IED_LABELS[ied.kind] : "Ramadhan";
-  const meta = fasting
-    ? fasting.when === "today"
-      ? `Hari ke-${fasting.day}`
-      : `Besok hari ke-${fasting.day}`
-    : ied
-      ? countdown(ied.daysLeft)
-      : undefined;
-
   return (
     <div className="flex size-full flex-col p-10">
-      <PanelHeader icon={MoonStar} title={title} meta={meta} tone="ungu" />
+      <PanelHeader icon={MoonStar} title={title} tone="ungu" />
       <div className={`grid min-h-0 flex-1 gap-5 ${wide ? "grid-cols-1" : "grid-cols-[1fr_1.05fr]"}`}>
-        {render(main, 1, wide ? "wide" : "large")}
-        {!wide && <div className="flex min-h-0 flex-col gap-5">{side.map((block, i) => render(block, i + 2, "compact"))}</div>}
+        {render(main, wide ? "wide" : "large")}
+        {!wide && <div className="flex min-h-0 flex-col gap-5">{side.map((block) => render(block, "compact"))}</div>}
       </div>
     </div>
   );

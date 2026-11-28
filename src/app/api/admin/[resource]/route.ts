@@ -4,14 +4,19 @@ import { authorize, handleError, jsonError } from "@/lib/api";
 import { audit } from "@/lib/auth";
 import { RESOURCE_PERMISSION } from "@/lib/permissions";
 import { publish } from "@/lib/realtime";
+import { parseDisplayId } from "@/lib/types";
 
-export async function GET(_req: Request, ctx: RouteContext<"/api/admin/[resource]">) {
+/** GET /api/admin/playlist?tv=2 = urutan tampilan satu layar TV saja. */
+export async function GET(request: Request, ctx: RouteContext<"/api/admin/[resource]">) {
   const { resource } = await ctx.params;
   if (!isResource(resource)) return jsonError("Resource tidak dikenal", 404);
   const user = await authorize(RESOURCE_PERMISSION[resource]);
   if (user instanceof NextResponse) return user;
   try {
-    return NextResponse.json(await listResource(resource));
+    const tvParam = resource === "playlist" ? new URL(request.url).searchParams.get("tv") : null;
+    const tv = tvParam === null ? null : parseDisplayId(tvParam);
+    if (tvParam !== null && !tv) return jsonError("Layar TV tidak dikenal", 404);
+    return NextResponse.json(await listResource(resource, tv ? `WHERE display_id = ${tv}` : ""));
   } catch (e) {
     return handleError(e);
   }

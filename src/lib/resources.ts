@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { query } from "./db";
-import { IED_KINDS, IED_LABELS, KAJIAN_RECURRENCES, ZISWAF_KINDS } from "./types";
+import { IED_KINDS, IED_LABELS, KAJIAN_RECURRENCES, MODULE_LABELS, ZISWAF_KINDS, type ModuleType } from "./types";
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal YYYY-MM-DD");
 const optionalDate = z
@@ -268,7 +268,9 @@ export function describeRecord(name: ResourceName, data: Record<string, unknown>
     ied: [IED_LABELS[data.kind as keyof typeof IED_LABELS] ?? "", s("date")].filter(Boolean).join(" · "),
     verses: s("source") || s("translation"),
     slides: s("caption") || s("image"),
-    playlist: s("type"),
+    playlist: [MODULE_LABELS[data.type as ModuleType] ?? s("type"), data.displayId != null ? `TV ${data.displayId}` : ""]
+      .filter(Boolean)
+      .join(" · "),
   };
   return parts[name].slice(0, 120);
 }

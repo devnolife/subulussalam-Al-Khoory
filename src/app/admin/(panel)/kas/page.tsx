@@ -56,7 +56,7 @@ function KasReport({ items, categories }: { items: FinanceEntry[]; categories: F
         <ShareButton text={financeReportText(report, mosque)} emptyMessage="Belum ada transaksi" />
         <ExportButton resource="finance" from={period.from} to={period.to} />
       </ToolBar>
-      <p className="text-xs text-white/40">Teks WhatsApp berisi total per kategori tanpa nama donatur. CSV berisi rincian transaksi.</p>
+      <p className="text-xs text-muted">Teks WhatsApp berisi total per kategori tanpa nama donatur. CSV berisi rincian transaksi.</p>
     </Card>
   );
 }
@@ -129,32 +129,34 @@ export default function KasAdmin() {
             .map((r) => r.donor.trim().toLowerCase()),
         ).size;
         return (
-          <div className="mb-4 space-y-3">
-            <Card className="card-zamrud relative overflow-hidden">
-              <p className="relative text-sm font-bold text-sky-100">Saldo kas saat ini</p>
-              <p className="relative mt-1 text-3xl font-extrabold tracking-[-0.02em] tabular-nums">{rupiah(balance)}</p>
-              <p className="relative mt-2 text-sm text-sky-100/80 tabular-nums">
-                Bulan ini <span className="font-bold text-white">+{rupiah(sum("in"))}</span> ·{" "}
-                <span className="font-bold text-bata-200">−{rupiah(sum("out"))}</span>
-              </p>
-              {donors > 0 && <p className="relative mt-0.5 text-xs text-sky-100/70">{donors} donatur tercatat bulan ini</p>}
-            </Card>
-            <Link
-              href="/admin/kas/kategori"
-              className="card flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-bold transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.98]"
-            >
-              <Tags className="size-5 text-gold-400" aria-hidden="true" />
-              <span className="flex-1">Kategori kas &amp; ZISWAF</span>
-              <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/admin/kas/impor"
-              className="card flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-bold transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.98]"
-            >
-              <Upload className="size-5 text-gold-400" aria-hidden="true" />
-              <span className="flex-1">Impor dari CSV/Excel</span>
-              <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
-            </Link>
+          <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-start">
+            <div className="grid gap-3">
+              <Card className="card-zamrud relative overflow-hidden">
+                <p className="relative text-sm font-bold text-sky-100">Saldo kas saat ini</p>
+                <p className="relative mt-1 text-3xl font-extrabold tracking-[-0.02em] tabular-nums">{rupiah(balance)}</p>
+                <p className="relative mt-2 text-sm text-sky-100/80 tabular-nums">
+                  Bulan ini <span className="font-bold text-white">+{rupiah(sum("in"))}</span> ·{" "}
+                  <span className="font-bold text-bata-200">−{rupiah(sum("out"))}</span>
+                </p>
+                {donors > 0 && <p className="relative mt-0.5 text-xs text-sky-200">{donors} donatur tercatat bulan ini</p>}
+              </Card>
+              <Link
+                href="/admin/kas/kategori"
+                className="card flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-bold transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.98]"
+              >
+                <Tags className="size-5 text-gold-400" aria-hidden="true" />
+                <span className="flex-1">Kategori kas &amp; ZISWAF</span>
+                <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/admin/kas/impor"
+                className="card flex items-center gap-3 rounded-[20px] px-4 py-3 text-sm font-bold transition-[scale,background-color] duration-150 hover:bg-white/10 active:scale-[0.98]"
+              >
+                <Upload className="size-5 text-gold-400" aria-hidden="true" />
+                <span className="flex-1">Impor dari CSV/Excel</span>
+                <ChevronRight className="size-5 text-white/30" aria-hidden="true" />
+              </Link>
+            </div>
             <KasReport items={items} categories={categoriesOf(lookups)} />
           </div>
         );

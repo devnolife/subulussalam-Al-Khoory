@@ -10,9 +10,10 @@ import { Ticker } from "./Ticker";
 import { EmergencyOverlay, PrayerOverlay } from "./PrayerOverlay";
 import { SunEmblem } from "./SunEmblem";
 import { useDisplayData, useNow } from "./useDisplayData";
+import type { DisplayId } from "@/lib/types";
 
-export function DisplayApp() {
-  const { state, status, offset } = useDisplayData();
+export function DisplayApp({ tv }: { tv: DisplayId }) {
+  const { state, status, offset } = useDisplayData(tv);
   const now = useNow(offset);
 
   if (!state) {

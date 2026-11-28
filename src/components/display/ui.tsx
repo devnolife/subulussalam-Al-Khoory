@@ -4,20 +4,29 @@ import type { ReactNode } from "react";
 export type TileTone = "brand" | "zamrud" | "ungu" | "bata" | "gold" | "soft";
 type TileSize = "sm" | "md" | "lg" | "xl";
 
+export const TONE_TEXT: Record<TileTone, string> = {
+  brand: "text-royal-400",
+  zamrud: "text-zamrud-300",
+  ungu: "text-ungu-300",
+  bata: "text-bata-300",
+  gold: "text-gold-300",
+  soft: "text-muted",
+};
+
 const TILE_TONE: Record<TileTone, string> = {
-  brand: "bg-royal-600 text-gold-400",
-  zamrud: "bg-zamrud-600 text-white",
-  ungu: "bg-ungu-600 text-white",
-  bata: "bg-bata-600 text-white",
+  brand: "bg-royal-500/25 text-royal-200",
+  zamrud: "bg-zamrud-800 text-zamrud-200",
+  ungu: "bg-ungu-800 text-ungu-200",
+  bata: "bg-bata-800 text-bata-200",
   gold: "bg-gold-400 text-navy-950",
   soft: "bg-white/10 text-sky-200",
 };
 
 const TILE_SIZE: Record<TileSize, { box: string; glyph: string }> = {
-  sm: { box: "size-11 rounded-[14px]", glyph: "size-5.5" },
-  md: { box: "size-14 rounded-[18px]", glyph: "size-7" },
-  lg: { box: "size-16 rounded-[20px]", glyph: "size-8" },
-  xl: { box: "size-28 rounded-[34px]", glyph: "size-14" },
+  sm: { box: "size-10 rounded-lg", glyph: "size-5" },
+  md: { box: "size-14 rounded-xl", glyph: "size-7" },
+  lg: { box: "size-16 rounded-2xl", glyph: "size-8" },
+  xl: { box: "size-28 rounded-3xl", glyph: "size-14" },
 };
 
 /** Ikon di dalam kotak berwarna, dipakai konsisten di seluruh layar. */
@@ -60,7 +69,7 @@ export function Chip({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 text-[20px] leading-none font-bold whitespace-nowrap ${CHIP_TONE[tone]} ${className}`}
+      className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-[20px] leading-none font-semibold whitespace-nowrap ${CHIP_TONE[tone]} ${className}`}
     >
       {Icon && <Icon className="size-5.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />}
       {children}
@@ -69,12 +78,12 @@ export function Chip({
 }
 
 /** `tone` mengikuti peran warna modul (lihat DESIGN.md). */
-export function PanelHeader({ icon, title, meta, tone = "brand" }: { icon: LucideIcon; title: string; meta?: string; tone?: TileTone }) {
+export function PanelHeader({ icon: Icon, title, meta, tone = "brand" }: { icon: LucideIcon; title: string; meta?: string; tone?: TileTone }) {
   return (
-    <header className="rise mb-7 flex items-center gap-5">
-      <IconTile icon={icon} size="lg" tone={tone} />
-      <h2 className="text-[40px] leading-none font-extrabold tracking-[-0.02em]">{title}</h2>
-      {meta && <Chip className="ml-auto">{meta}</Chip>}
+    <header className="mb-5 flex items-center gap-4 border-b border-line pb-4">
+      <Icon className={`size-8 shrink-0 ${TONE_TEXT[tone]}`} strokeWidth={1.8} aria-hidden="true" />
+      <h2 className="text-[42px] leading-none font-bold tracking-[-0.035em]">{title}</h2>
+      {meta && <p className="ml-auto text-[22px] text-muted">{meta}</p>}
     </header>
   );
 }
@@ -119,25 +128,17 @@ export function ProgressRing({
   );
 }
 
-/** Bintang delapan kecil sebagai pemisah ornamen. */
-export function StarOrnament({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path d="M12 1.5 14.1 6.92 19.42 4.58 17.08 9.9 22.5 12 17.08 14.1 19.42 19.42 14.1 17.08 12 22.5 9.9 17.08 4.58 19.42 6.92 14.1 1.5 12 6.92 9.9 4.58 4.58 9.9 6.92Z" />
-    </svg>
-  );
-}
-
 const HONORIFIC = /^(ustadzah|ustadz|ustazah|ustaz|ust|kh|hj|h|dr|drs|prof|ir)\.?\s+/i;
 
-/** Dua huruf awal nama tanpa gelar, mis. "Ustadz Ahmad Fauzi" → "AF". */
+/** Dua huruf awal nama tanpa gelar, mis. "Ustadz Ahmad Fauzi" → "AF", "Mursalim, S.Pd." → "M". */
 export function initials(name: string): string {
-  let rest = name.trim();
+  // Gelar akademik ditulis di belakang koma, jadi hanya bagian sebelum koma pertama yang dipakai.
+  let rest = name.split(",")[0].trim();
   for (let prev = ""; prev !== rest; ) {
     prev = rest;
     rest = rest.replace(HONORIFIC, "");
   }
-  const words = rest.split(/[\s,]+/).filter((w) => /^\p{L}/u.test(w));
+  const words = rest.split(/\s+/).filter((w) => /^\p{L}/u.test(w));
   return words
     .slice(0, 2)
     .map((w) => w[0].toUpperCase())

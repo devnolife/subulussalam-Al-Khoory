@@ -5,7 +5,7 @@ import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/components/admin/api";
 import { useAdminUser } from "@/components/admin/AdminUser";
-import { Button, Card, Field, PageHeader, Select, Sheet, TextInput, Toggle } from "@/components/admin/ui";
+import { Button, Card, Field, FormError, PageHeader, Select, Sheet, TextInput, Toggle } from "@/components/admin/ui";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS, ROLES, type Role } from "@/lib/permissions";
 import type { UserRow } from "@/lib/users";
 
@@ -21,6 +21,7 @@ export default function PenggunaPage() {
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const load = useCallback(() => {
     api<UserRow[]>("/api/admin/users")
@@ -31,10 +32,15 @@ export default function PenggunaPage() {
   useEffect(load, [load]);
 
   const set = (patch: Partial<Draft>) => setDraft((d) => (d ? { ...d, ...patch } : d));
+  const edit = (values: Draft) => {
+    setSaveError("");
+    setDraft(values);
+  };
 
   const save = async () => {
     if (!draft) return;
     setSaving(true);
+    setSaveError("");
     try {
       if (draft.id) {
         const { name, role, active, password } = draft;
@@ -48,7 +54,7 @@ export default function PenggunaPage() {
       setDraft(null);
       load();
     } catch (e) {
-      toast.error((e as Error).message);
+      setSaveError((e as Error).message);
     } finally {
       setSaving(false);
     }
@@ -62,22 +68,22 @@ export default function PenggunaPage() {
         title="Pengguna"
         description="Akun pengurus yang bisa masuk panel ini."
         action={
-          <Button onClick={() => setDraft({ username: "", name: "", role: "konten", active: true, password: "" })}>
+          <Button onClick={() => edit({ username: "", name: "", role: "konten", active: true, password: "" })}>
             <Plus className="size-5" /> Tambah
           </Button>
         }
       />
       {!users ? (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/5" />
           ))}
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
           {users.map((u) => (
             <li key={u.id}>
-              <Card className={`flex items-start gap-3 ${u.active ? "" : "opacity-60"}`}>
+              <Card className={`flex h-full items-start gap-3 ${u.active ? "" : "opacity-60"}`}>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold">
                     {u.name || u.username}
@@ -88,11 +94,11 @@ export default function PenggunaPage() {
                     <span className="rounded-full bg-gold-400/15 px-2.5 py-1 text-gold-300">{ROLE_LABELS[u.role]}</span>
                     {!u.active && <span className="rounded-full bg-rose-500/15 px-2.5 py-1 text-rose-200">Nonaktif</span>}
                   </p>
-                  <p className="mt-2 text-xs text-white/45">Login terakhir: {formatTime(u.lastLoginAt)}</p>
+                  <p className="mt-2 text-xs text-muted">Login terakhir: {formatTime(u.lastLoginAt)}</p>
                 </div>
                 <button
-                  onClick={() => setDraft({ ...u, password: "" })}
-                  className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/5 text-sky-200"
+                  onClick={() => edit({ ...u, password: "" })}
+                  className="grid size-11 shrink-0 place-items-center rounded-lg text-sky-200 hover:bg-navy-800"
                   aria-label={`Ubah ${u.username}`}
                 >
                   <Pencil className="size-4" />
@@ -144,6 +150,7 @@ export default function PenggunaPage() {
             >
               <TextInput type="password" value={draft.password} onChange={(e) => set({ password: e.target.value })} autoComplete="new-password" />
             </Field>
+            <FormError message={saveError} />
             <Button
               type="submit"
               className="w-full"

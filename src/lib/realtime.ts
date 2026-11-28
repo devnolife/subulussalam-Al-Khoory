@@ -1,21 +1,25 @@
 import { EventEmitter } from "events";
+import type { DisplayId } from "./types";
 
 export type RealtimeEvent =
   | { type: "update"; topics: string[] }
-  | { type: "command"; command: "reload" };
+  /** `tv` kosong = semua layar. */
+  | { type: "command"; command: "reload"; tv?: DisplayId };
 
-type G = typeof globalThis & {
-  __realtime?: { emitter: EventEmitter; displays: Map<string, number>; version: number };
-};
+/** Satu koneksi SSE dari layar TV; `key` dicocokkan saat status diminta agar ikut berubah bila kunci diganti. */
+export type Screen = { tv: DisplayId; client: string; key: string | null; lastSeen: number };
+
+type Hub = { emitter: EventEmitter; screens: Map<string, Screen>; version: number };
+type G = typeof globalThis & { __realtimeHub?: Hub };
 const g = globalThis as G;
 
-function hub() {
-  if (!g.__realtime) {
+function hub(): Hub {
+  if (!g.__realtimeHub) {
     const emitter = new EventEmitter();
-    emitter.setMaxListeners(1000);
-    g.__realtime = { emitter, displays: new Map(), version: Date.now() };
+    emitter.setMaxListeners(0);
+    g.__realtimeHub = { emitter, screens: new Map(), version: Date.now() };
   }
-  return g.__realtime;
+  return g.__realtimeHub;
 }
 
 export function publish(event: RealtimeEvent): void {
@@ -34,14 +38,25 @@ export function contentVersion(): number {
   return hub().version;
 }
 
-/** Status layar TV yang terhubung (id → terakhir terlihat). */
-export function markDisplay(id: string, connected: boolean): void {
-  const h = hub();
-  if (connected) h.displays.set(id, Date.now());
-  else h.displays.delete(id);
+/** Pesan untuk satu penerima (mis. sinyal WebRTC); false bila tidak ada yang mendengarkan. */
+export function emitTo(channel: string, payload: unknown): boolean {
+  return hub().emitter.emit(`to:${channel}`, payload);
 }
 
-export function displayStatus(): { connected: number; lastSeen: number | null } {
-  const values = [...hub().displays.values()];
-  return { connected: values.length, lastSeen: values.length ? Math.max(...values) : null };
+export function listen<T>(channel: string, fn: (payload: T) => void): () => void {
+  const h = hub();
+  const name = `to:${channel}`;
+  h.emitter.on(name, fn);
+  return () => h.emitter.off(name, fn);
+}
+
+/** Catat koneksi layar TV (`null` = terputus). */
+export function markDisplay(conn: string, screen: Omit<Screen, "lastSeen"> | null): void {
+  const h = hub();
+  if (screen) h.screens.set(conn, { ...screen, lastSeen: Date.now() });
+  else h.screens.delete(conn);
+}
+
+export function connectedScreens(): Screen[] {
+  return [...hub().screens.values()];
 }

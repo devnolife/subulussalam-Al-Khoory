@@ -3,55 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/components/admin/api";
+import { describeAudit } from "@/components/admin/audit-label";
 import { Button, Card, EmptyState, PageHeader } from "@/components/admin/ui";
 import type { AuditEntry } from "@/lib/users";
-
-const RESOURCE_LABELS: Record<string, string> = {
-  announcements: "pengumuman",
-  kajian: "jadwal kajian",
-  jumat: "petugas Jumat",
-  finance: "transaksi kas",
-  finance_categories: "kategori kas",
-  verses: "ayat/hadis",
-  slides: "poster",
-  speakers: "pembicara",
-  board_members: "pengurus",
-  tarawih: "petugas tarawih",
-  ied: "sholat Ied",
-  playlist: "urutan tampilan",
-};
-
-function describe(e: AuditEntry): string {
-  const resource = RESOURCE_LABELS[e.target.split(":")[0]] ?? "data";
-  switch (e.action) {
-    case "login":
-      return "Masuk ke panel";
-    case "logout":
-      return "Keluar dari panel";
-    case "create":
-      return `Menambah ${resource}`;
-    case "update":
-      return `Mengubah ${resource}`;
-    case "delete":
-      return `Menghapus ${resource}`;
-    case "export":
-      return `Mengunduh CSV ${resource}`;
-    case "import":
-      return `Mengimpor ${resource} dari file`;
-    case "command":
-      return "Remote layar TV";
-    case "settings":
-      return "Mengubah pengaturan";
-    case "password":
-      return "Mengganti password";
-    case "user.create":
-      return `Menambah pengguna @${e.target.replace("pengguna:", "")}`;
-    case "user.update":
-      return `Mengubah pengguna @${e.target.replace("pengguna:", "")}`;
-    default:
-      return e.action;
-  }
-}
 
 const dayKey = (iso: string) => new Date(iso).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
@@ -96,7 +50,7 @@ export default function RiwayatPage() {
   }
 
   return (
-    <div>
+    <div className="max-w-4xl">
       <PageHeader title="Riwayat aktivitas" description="Siapa mengubah apa dan kapan. Disimpan selama 1 tahun." />
       {!items ? (
         <div className="space-y-3">
@@ -114,13 +68,13 @@ export default function RiwayatPage() {
               <Card className="divide-y divide-white/5 p-0">
                 {entries.map((e) => (
                   <div key={e.id} className="flex gap-3 p-4">
-                    <time dateTime={e.at} className="w-11 shrink-0 pt-0.5 text-sm text-white/45 tabular-nums">
+                    <time dateTime={e.at} className="w-11 shrink-0 pt-0.5 text-sm text-muted tabular-nums">
                       {timeOf(e.at)}
                     </time>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold">{describe(e)}</p>
+                      <p className="font-semibold">{describeAudit(e)}</p>
                       {e.detail && <p className="mt-0.5 text-sm break-words text-sky-200/70">{e.detail}</p>}
-                      <p className="mt-1 text-xs text-white/45">
+                      <p className="mt-1 text-xs text-muted">
                         {e.name ? `${e.name} · ` : ""}@{e.username || "?"}
                       </p>
                     </div>

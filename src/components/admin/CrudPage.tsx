@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, type ImageKind } from "./api";
-import { Button, Card, EmptyState, Field, ImageField, PageHeader, Select, Sheet, TextArea, TextInput, Toggle } from "./ui";
+import { Button, Card, EmptyState, Field, FormError, ImageField, PageHeader, Select, Sheet, TextArea, TextInput, Toggle } from "./ui";
 
 export type Option = { value: string; label: string };
 type Row = { id: number } & Record<string, unknown>;
@@ -52,6 +52,7 @@ export function CrudPage<T extends Row>({
   const [lookupData, setLookupData] = useState<Lookups>({});
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const lookupKey = (lookups ?? []).join(",");
 
   const load = useCallback(async () => {
@@ -80,6 +81,7 @@ export function CrudPage<T extends Row>({
   const save = async () => {
     if (!editing) return;
     setSaving(true);
+    setSaveError("");
     try {
       const { id, ...body } = editing;
       const raw = Object.fromEntries(fields.map((f) => [f.name, body[f.name]]));
@@ -90,7 +92,7 @@ export function CrudPage<T extends Row>({
       setEditing(null);
       load();
     } catch (e) {
-      toast.error((e as Error).message);
+      setSaveError((e as Error).message);
     } finally {
       setSaving(false);
     }
@@ -108,6 +110,10 @@ export function CrudPage<T extends Row>({
   };
 
   const set = (name: string, value: unknown) => setEditing((e) => (e ? { ...e, [name]: value } : e));
+  const edit = (values: Record<string, unknown>) => {
+    setSaveError("");
+    setEditing(values);
+  };
 
   return (
     <div>
@@ -115,37 +121,37 @@ export function CrudPage<T extends Row>({
         title={title}
         description={description}
         action={
-          <Button onClick={() => setEditing(defaults())} aria-label="Tambah">
+          <Button onClick={() => edit(defaults())} aria-label="Tambah">
             <Plus className="size-5" /> Tambah
           </Button>
         }
       />
       {items && header?.(items, lookupData)}
       {!items ? (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/5" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <EmptyState>Belum ada data. Ketuk &ldquo;Tambah&rdquo; untuk mulai.</EmptyState>
+        <EmptyState>Belum ada data. Pilih &ldquo;Tambah&rdquo; untuk mulai.</EmptyState>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3">
           {items.map((item) => (
             <li key={item.id}>
-              <Card className="flex items-start gap-3">
+              <Card className="flex h-full items-start gap-3">
                 <div className="min-w-0 flex-1">{renderItem(item, lookupData)}</div>
                 <div className="flex shrink-0 gap-1">
                   <button
-                    onClick={() => setEditing({ ...item })}
-                    className="grid size-10 place-items-center rounded-xl bg-white/5 text-sky-200"
+                    onClick={() => edit({ ...item })}
+                    className="grid size-11 place-items-center rounded-lg text-sky-200 hover:bg-navy-800"
                     aria-label="Ubah"
                   >
                     <Pencil className="size-4" />
                   </button>
                   <button
                     onClick={() => remove(item)}
-                    className="grid size-10 place-items-center rounded-xl bg-rose-500/10 text-rose-300"
+                    className="grid size-11 place-items-center rounded-lg text-bata-300 hover:bg-bata-800/45"
                     aria-label="Hapus"
                   >
                     <Trash2 className="size-4" />
@@ -178,6 +184,7 @@ export function CrudPage<T extends Row>({
                   <Field key={f.name} label={f.label} help={f.help}>
                     {f.type === "textarea" || f.type === "arabic" ? (
                       <TextArea
+                        name={f.name}
                         value={String(v ?? "")}
                         onChange={(e) => set(f.name, e.target.value)}
                         placeholder={f.placeholder}
@@ -186,11 +193,12 @@ export function CrudPage<T extends Row>({
                         rows={f.type === "arabic" ? 4 : 3}
                       />
                     ) : f.type === "select" ? (
-                      <Select value={String(v ?? "")} onChange={(e) => set(f.name, e.target.value)} options={options} />
+                      <Select name={f.name} value={String(v ?? "")} onChange={(e) => set(f.name, e.target.value)} options={options} />
                     ) : f.type === "image" ? (
                       <ImageField value={(v as string) || null} onChange={(url) => set(f.name, url ?? "")} kind={f.imageKind} />
                     ) : (
                       <TextInput
+                        name={f.name}
                         type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "time" ? "time" : "text"}
                         inputMode={f.type === "number" ? "numeric" : undefined}
                         value={String(v ?? "")}
@@ -203,6 +211,7 @@ export function CrudPage<T extends Row>({
                   </Field>
                 );
               })}
+            <FormError message={saveError} />
             <Button type="submit" loading={saving} className="w-full">
               Simpan
             </Button>

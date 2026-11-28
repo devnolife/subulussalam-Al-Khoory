@@ -1,221 +1,129 @@
-"use client";
-
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { BellRing, CalendarClock, ExternalLink, LogOut, MonitorPlay, RefreshCw, RotateCw, Square } from "lucide-react";
-import { toast } from "sonner";
-import { api } from "@/components/admin/api";
-import { Button, Card, PageHeader, Select, TextArea } from "@/components/admin/ui";
-import { DisplayPreview } from "@/components/admin/DisplayPreview";
-import { SummaryCards } from "@/components/admin/SummaryCards";
-import { IconTile } from "@/components/display/ui";
-import { FARDH_KEYS, MODULE_LABELS, MODULE_TYPES, PRAYER_LABELS, type Settings } from "@/lib/types";
+import { redirect } from "next/navigation";
+import { BellRing } from "lucide-react";
+import { MosqueCover } from "@/components/MosqueCover";
+import { AutoRefresh } from "@/components/admin/dashboard/AutoRefresh";
+import { Stat } from "@/components/admin/dashboard/Panel";
+import { NextPrayerChip, PrayerTodayCard } from "@/components/admin/dashboard/PrayerCard";
+import { ScreensCard } from "@/components/admin/dashboard/ScreensCard";
+import {
+  ActivityPanel,
+  AgendaPanel,
+  AnnouncementsPanel,
+  CashFlowPanel,
+  CategoriesPanel,
+  ContentCountsPanel,
+  IslamicDaysPanel,
+  RecentTransactionsPanel,
+  ZiswafPanel,
+} from "@/components/admin/dashboard/sections";
+import { canOpen } from "@/components/admin/menu";
+import { currentUser } from "@/lib/auth";
+import { getDashboard } from "@/lib/dashboard";
+import { can } from "@/lib/permissions";
+import { rupiah } from "@/lib/time";
 
-type Status = { connected: number; lastSeen: number | null };
+const SHORTCUTS = [
+  { href: "/admin/kas", label: "Kas masjid" },
+  { href: "/admin/kas/impor", label: "Impor transaksi" },
+  { href: "/admin/pengumuman", label: "Pengumuman" },
+  { href: "/admin/kajian", label: "Jadwal kajian" },
+  { href: "/admin/remote", label: "Remote TV" },
+  { href: "/admin/kamera", label: "Siaran kamera" },
+];
 
-export default function RemotePage() {
-  const router = useRouter();
-  const [settings, setSettings] = useState<Settings | null>(null);
-  const [status, setStatus] = useState<Status | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [showType, setShowType] = useState<string>("kabah");
-  const [showMinutes, setShowMinutes] = useState("15");
-  const [emergencyText, setEmergencyText] = useState("");
-  const [prayer, setPrayer] = useState<string>("dzuhur");
-  const [now, setNow] = useState(() => Date.now());
-
-  const load = useCallback(async () => {
-    try {
-      const [s, st] = await Promise.all([api<Settings>("/api/admin/settings"), api<Status>("/api/admin/status")]);
-      setSettings(s);
-      setStatus(st);
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    Promise.all([api<Settings>("/api/admin/settings"), api<Status>("/api/admin/status")])
-      .then(([s, st]) => {
-        if (!alive) return;
-        setSettings(s);
-        setStatus(st);
-      })
-      .catch((e: Error) => toast.error(e.message));
-    const iv = setInterval(() => {
-      setNow(Date.now());
-      api<Status>("/api/admin/status").then(setStatus).catch(() => {});
-    }, 10_000);
-    return () => {
-      alive = false;
-      clearInterval(iv);
-    };
-  }, []);
-
-  const command = async (body: Record<string, unknown>, success: string) => {
-    setBusy(String(body.action));
-    try {
-      await api("/api/admin/command", { method: "POST", body });
-      toast.success(success);
-      await load();
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const logout = async () => {
-    await api("/api/auth/logout", { method: "POST" });
-    router.replace("/admin/login");
-  };
-
-  const override = settings?.override;
-  const overrideActive = !!override?.type && (!override.until || override.until > now);
-  const manual = settings?.manualPrayer;
+/** Beranda panel pengurus: ringkasan masjid hari ini, isinya menyesuaikan peran akun. */
+export default async function DashboardPage() {
+  const user = await currentUser();
+  if (!user) redirect("/admin/login");
+  const { role } = user;
+  const d = await getDashboard(role);
+  const f = d.finance;
+  const shortcuts = SHORTCUTS.filter((s) => canOpen(role, s.href));
+  const linkIf = (href: string) => (canOpen(role, href) ? href : null);
 
   return (
-    <div className="space-y-5">
-      <PageHeader
-        title="Remote Layar"
-        description={settings?.mosque.name}
-        action={
-          <button onClick={logout} className="grid size-11 place-items-center rounded-xl bg-white/5 text-white/60" aria-label="Keluar">
-            <LogOut className="size-5" />
-          </button>
-        }
-      />
+    <>
+      <AutoRefresh today={d.today} />
+      <header className="mb-4 overflow-hidden rounded-2xl rounded-tr-[3.5rem]">
+        <MosqueCover variant="dashboard">
+          <h1 className="text-2xl leading-tight font-bold tracking-tight sm:text-3xl lg:text-4xl">Ringkasan masjid</h1>
+          <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm leading-snug">
+            <span className="font-semibold">{d.gregorian}</span>
+            <span className="text-ungu-200">{d.hijri}</span>
+          </p>
+          {d.prayer && <NextPrayerChip prayer={d.prayer} serverNow={d.now} className="mt-2 xl:hidden" />}
+        </MosqueCover>
+      </header>
 
-      <div className="space-y-3">
-        <DisplayPreview />
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="flex items-center gap-2">
-            <span className={`size-2.5 rounded-full ${status?.connected ? "bg-emerald-400" : "bg-rose-400"}`} />
-            {status?.connected ? `${status.connected} layar TV terhubung` : "Tidak ada layar TV terhubung"}
-          </span>
-          <Link href="/display" target="_blank" className="flex items-center gap-1 text-sky-300">
-            Buka layar <ExternalLink className="size-3.5" />
-          </Link>
-        </div>
-      </div>
-
-      <SummaryCards />
-
-      <Card className="space-y-3">
-        <h2 className="flex items-center gap-3 font-bold">
-          <IconTile icon={MonitorPlay} size="sm" /> Tampilkan sekarang
-        </h2>
-        {overrideActive && override?.type && (
-          <div className="flex items-center justify-between gap-2 rounded-2xl bg-royal-600/25 p-3 text-sm ring-1 ring-royal-500/40">
-            <span>
-              Sedang dikunci: <b>{MODULE_LABELS[override.type]}</b>
-              {override.until ? ` s/d ${new Date(override.until).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}` : ""}
-            </span>
-            <Button variant="ghost" loading={busy === "clearShow"} onClick={() => command({ action: "clearShow" }, "Kembali ke rotasi otomatis")}>
-              <Square className="size-4" /> Lepas
-            </Button>
+      {d.emergency.active && (
+        <section role="status" className="card-bata mb-6 flex flex-wrap items-start gap-3 rounded-[24px] p-4">
+          <BellRing className="mt-0.5 size-5 shrink-0 text-bata-200" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="font-bold">Pesan darurat sedang tampil di layar TV</p>
+            {d.emergency.text && <p className="mt-1 text-sm whitespace-pre-line text-sky-100">{d.emergency.text}</p>}
           </div>
-        )}
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <Select
-            value={showType}
-            onChange={(e) => setShowType(e.target.value)}
-            options={MODULE_TYPES.map((t) => ({ value: t, label: MODULE_LABELS[t] }))}
-            aria-label="Modul"
-          />
-          <Select
-            value={showMinutes}
-            onChange={(e) => setShowMinutes(e.target.value)}
-            aria-label="Lama"
-            options={[
-              { value: "5", label: "5 mnt" },
-              { value: "15", label: "15 mnt" },
-              { value: "30", label: "30 mnt" },
-              { value: "60", label: "1 jam" },
-              { value: "0", label: "Terus" },
-            ]}
-          />
-        </div>
-        <Button
-          className="w-full"
-          loading={busy === "show"}
-          onClick={() => command({ action: "show", type: showType, minutes: Number(showMinutes) }, "Ditampilkan di layar")}
-        >
-          Tampilkan di TV
-        </Button>
-      </Card>
+          {canOpen(role, "/admin/remote") && (
+            <Link href="/admin/remote" className="flex min-h-11 items-center rounded-full bg-white/15 px-4 text-sm font-bold hover:bg-white/25">
+              Kelola
+            </Link>
+          )}
+        </section>
+      )}
 
-      <Card className="space-y-3">
-        <h2 className="flex items-center gap-3 font-bold">
-          <IconTile icon={BellRing} tone="bata" size="sm" /> Pengumuman darurat
-        </h2>
-        {settings?.emergency.active ? (
+      <section aria-label="Ringkasan" className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line xl:grid-cols-4">
+        {f ? (
           <>
-            <p className="rounded-2xl bg-bata-700/35 p-3 text-sm whitespace-pre-line text-bata-200 ring-1 ring-bata-400/40">{settings.emergency.text}</p>
-            <Button
-              variant="danger"
-              className="w-full"
-              loading={busy === "clearEmergency"}
-              onClick={() => command({ action: "clearEmergency" }, "Pengumuman darurat dihentikan")}
-            >
-              Hentikan
-            </Button>
+            <Stat label="Saldo kas" value={rupiah(f.balance)} tone="zamrud" href="/admin/kas" />
+            <Stat label="Pemasukan bulan ini" value={rupiah(f.monthIn)} valueClassName="text-zamrud-300" href="/admin/kas" />
+            <Stat label="Pengeluaran bulan ini" value={rupiah(f.monthOut)} valueClassName="text-bata-300" href="/admin/kas" />
+            <Stat label="Donatur bulan ini" value={`${f.monthDonors} orang`} href="/admin/kas" />
           </>
         ) : (
           <>
-            <TextArea
-              value={emergencyText}
-              onChange={(e) => setEmergencyText(e.target.value)}
-              placeholder="Contoh: Telah berpulang ke rahmatullah…"
-              aria-label="Teks pengumuman darurat"
-            />
-            <Button
-              variant="gold"
-              className="w-full"
-              disabled={!emergencyText.trim()}
-              loading={busy === "emergency"}
-              onClick={() => command({ action: "emergency", text: emergencyText }, "Pengumuman darurat tampil").then(() => setEmergencyText(""))}
-            >
-              Tampilkan di atas layar
-            </Button>
+            <Stat label="Pengumuman aktif" value={String(d.counts.announcements)} tone={d.counts.announcements ? "bata" : "neutral"} href={linkIf("/admin/pengumuman")} />
+            <Stat label="Kajian terjadwal" value={String(d.counts.kajian)} href={linkIf("/admin/kajian")} />
+            <Stat label="Poster aktif" value={String(d.counts.slides)} href={linkIf("/admin/slide")} />
+            <Stat label="Pengurus" value={String(d.counts.board)} href={linkIf("/admin/pengurus")} />
           </>
         )}
-      </Card>
+      </section>
 
-      <Card className="space-y-3">
-        <h2 className="flex items-center gap-3 font-bold">
-          <IconTile icon={CalendarClock} size="sm" /> Mode sholat manual
-        </h2>
-        <p className="text-sm text-white/55">
-          Mode sholat berjalan otomatis sesuai jadwal. Gunakan ini bila waktu pelaksanaan berbeda (mis. sholat tarawih/ied).
-        </p>
-        {manual?.prayer ? (
-          <Button variant="danger" className="w-full" loading={busy === "clearPrayer"} onClick={() => command({ action: "clearPrayer" }, "Mode sholat manual dihentikan")}>
-            Hentikan mode {PRAYER_LABELS[manual.prayer]}
-          </Button>
-        ) : (
-          <div className="grid grid-cols-[1fr_auto] gap-2">
-            <Select value={prayer} onChange={(e) => setPrayer(e.target.value)} options={FARDH_KEYS.map((k) => ({ value: k, label: PRAYER_LABELS[k] }))} aria-label="Waktu sholat" />
-            <Button loading={busy === "prayer"} onClick={() => command({ action: "prayer", prayer }, "Mode adzan dimulai")}>
-              Mulai adzan
-            </Button>
-          </div>
-        )}
-      </Card>
+      {shortcuts.length > 0 && (
+        <nav aria-label="Pintasan" className="mt-3 grid grid-cols-2 gap-x-3 sm:flex sm:flex-wrap sm:gap-x-5 lg:hidden">
+          {shortcuts.map(({ href, label }) => (
+            <Link key={href} href={href} className="flex min-h-11 items-center text-sm font-semibold text-sky-200 underline underline-offset-4 hover:text-white">
+              {label}
+            </Link>
+          ))}
+        </nav>
+      )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <Button variant="ghost" loading={busy === "reload"} onClick={() => command({ action: "reload" }, "Layar TV dimuat ulang")}>
-          <RotateCw className="size-4" /> Muat ulang TV
-        </Button>
-        <Button variant="ghost" loading={busy === "refreshPrayer"} onClick={() => command({ action: "refreshPrayer" }, "Jadwal sholat diperbarui")}>
-          <RefreshCw className="size-4" /> Perbarui jadwal
-        </Button>
+      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3 xl:items-start">
+        <div className="min-w-0 space-y-5 xl:col-span-2">
+          {f && (
+            <>
+              <CashFlowPanel finance={f} />
+              {(f.recent.length > 0 || f.categories.length > 0) && (
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                  <CategoriesPanel finance={f} />
+                  <RecentTransactionsPanel finance={f} />
+                </div>
+              )}
+            </>
+          )}
+          <AgendaPanel items={d.agenda} today={d.today} role={role} />
+          <AnnouncementsPanel items={d.announcements} role={role} />
+          {d.activity && <ActivityPanel items={d.activity} today={d.today} />}
+        </div>
+        <aside aria-label="Hari ini" className="grid min-w-0 content-start gap-5 md:grid-cols-2 xl:grid-cols-1">
+          <PrayerTodayCard prayer={d.prayer} serverNow={d.now} city={d.city} />
+          {d.screens && <ScreensCard initial={d.screens} serverNow={d.now} />}
+          <IslamicDaysPanel days={d.islamicDays} />
+          {f && <ZiswafPanel finance={f} />}
+          {f && can(role, "content") && <ContentCountsPanel counts={d.counts} role={role} />}
+        </aside>
       </div>
-      <p className="text-center text-xs text-white/40">
-        Tips: buka /display di browser TV dalam mode layar penuh (F11) atau mode kiosk.
-      </p>
-    </div>
+    </>
   );
 }

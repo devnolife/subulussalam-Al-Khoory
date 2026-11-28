@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { can, guardUserChange, homeFor, RESOURCE_PERMISSION, routePermission, type UserSummary } from "../src/lib/permissions";
+import { can, guardUserChange, RESOURCE_PERMISSION, routePermission, type UserSummary } from "../src/lib/permissions";
 import { RESOURCES } from "../src/lib/resources";
 
 describe("izin peran", () => {
@@ -21,19 +21,16 @@ describe("izin peran", () => {
   });
 
   it("memetakan halaman panel ke izinnya", () => {
-    expect(routePermission("/admin")).toBe("remote");
+    expect(routePermission("/admin")).toBeNull();
+    expect(routePermission("/admin/remote")).toBe("remote");
+    expect(routePermission("/admin/kamera")).toBe("remote");
     expect(routePermission("/admin/kas")).toBe("finance");
+    expect(routePermission("/admin/kas/impor")).toBe("finance");
     expect(routePermission("/admin/slide")).toBe("content");
     expect(routePermission("/admin/pengguna")).toBe("users");
     expect(routePermission("/admin/riwayat")).toBe("audit");
     expect(routePermission("/admin/konten")).toBeNull();
     expect(routePermission("/admin/pengaturan")).toBeNull();
-  });
-
-  it("mengarahkan ke halaman awal yang bisa dibuka", () => {
-    expect(homeFor("admin")).toBe("/admin");
-    expect(homeFor("operator")).toBe("/admin");
-    expect(homeFor("bendahara")).toBe("/admin/kas");
   });
 });
 

@@ -1,12 +1,10 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { HandCoins, HandHeart, HeartHandshake } from "lucide-react";
 import { ZISWAF_LABELS, type DisplayState } from "@/lib/types";
 import { formatDateStr, rupiah } from "@/lib/time";
 import { Chip, PanelHeader } from "./ui";
 
-const delay = (step: number): CSSProperties => ({ animationDelay: `${step * 100}ms` });
 
 const short = (n: number) => rupiah(n).replace("Rp ", "");
 
@@ -22,7 +20,7 @@ function compact(n: number): string {
 
 function DonorList({ donors, wide }: { donors: DisplayState["finance"]["donors"]; wide: boolean }) {
   return (
-    <div className="card-zamrud rise relative flex min-h-0 flex-col overflow-hidden rounded-[28px] px-8 pt-7 pb-3" style={delay(1)}>
+    <div className="card-zamrud relative flex min-h-0 flex-col overflow-hidden rounded-[28px] px-8 pt-7 pb-3">
       <p className="relative flex items-center gap-3 text-[24px] font-extrabold text-gold-400">
         <HeartHandshake className="size-7" aria-hidden="true" />
         Jazakumullahu khairan
@@ -33,7 +31,7 @@ function DonorList({ donors, wide }: { donors: DisplayState["finance"]["donors"]
           <li key={d.id} className="flex items-center gap-4 border-b border-white/10 py-3">
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[26px] leading-tight font-bold">{d.name}</span>
-              <span className="block truncate text-[17px] text-sky-100/70">
+              <span className="block truncate text-[17px] text-sky-200">
                 {[formatDateStr(d.date), d.category].filter(Boolean).join(" · ")}
               </span>
             </span>
@@ -48,8 +46,8 @@ function DonorList({ donors, wide }: { donors: DisplayState["finance"]["donors"]
 function ZiswafGrid({ rows, year, wide }: { rows: DisplayState["finance"]["ziswaf"]; year: number; wide: boolean }) {
   return (
     <div className={`grid min-h-0 gap-4 ${wide ? "grid-cols-4" : "grid-cols-2"}`}>
-      {rows.map((z, idx) => (
-        <div key={z.kind} className="tile rise flex min-h-0 flex-col rounded-[24px] px-6 py-5" style={delay(idx + 2)}>
+      {rows.map((z) => (
+        <div key={z.kind} className="tile flex min-h-0 flex-col rounded-[24px] px-6 py-5">
           <p className="text-[26px] font-extrabold">{ZISWAF_LABELS[z.kind]}</p>
           <dl className="mt-auto space-y-2 pt-3">
             <div>
@@ -93,7 +91,7 @@ export function DonaturPanel({ state }: { state: DisplayState }) {
         </div>
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-5">
-          <p className="rise flex items-center gap-3 text-[24px] text-sky-100/85" style={delay(1)}>
+          <p className="flex items-center gap-3 text-[24px] text-sky-100/85">
             <Chip icon={HandCoins} tone="gold">
               Rekap ZISWAF
             </Chip>

@@ -1,6 +1,4 @@
-import { Megaphone } from "lucide-react";
 import type { DisplayState } from "@/lib/types";
-import { StarOrnament } from "./ui";
 
 export function Ticker({ state }: { state: DisplayState }) {
   const items = state.announcements.filter((a) => a.showTicker).map((a) => (a.title ? `${a.title}: ${a.body}` : a.body));
@@ -18,7 +16,7 @@ export function Ticker({ state }: { state: DisplayState }) {
       {items.map((text, i) => (
         <span key={`${copy}-${i}`} className="flex items-center">
           <span className="px-9">{text}</span>
-          <StarOrnament className="size-4 shrink-0 text-gold-400" />
+          <span aria-hidden="true" className="text-muted">·</span>
         </span>
       ))}
     </span>
@@ -26,9 +24,8 @@ export function Ticker({ state }: { state: DisplayState }) {
 
   return (
     <footer className="shrink-0 px-14 pt-5 pb-6">
-      <div className="card flex h-[60px] items-stretch overflow-hidden rounded-[20px]">
-        <div className="flex shrink-0 items-center gap-3 bg-gold-400 pr-7 pl-6 text-[20px] font-extrabold text-navy-950">
-          <Megaphone className="size-6" aria-hidden="true" />
+      <div className="card flex h-[60px] items-stretch overflow-hidden rounded-xl">
+        <div className="flex shrink-0 items-center border-r border-line px-6 text-[22px] font-semibold text-bata-200">
           Informasi
         </div>
         <div className="relative min-w-0 flex-1 overflow-hidden">

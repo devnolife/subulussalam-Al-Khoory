@@ -122,7 +122,7 @@ export default function KajianAdmin() {
         return (
           <>
             {when && (
-              <p className={`text-xs font-semibold uppercase ${past ? "text-white/40" : "text-gold-400"}`}>{when}</p>
+              <p className={`text-xs font-semibold uppercase ${past ? "text-muted" : "text-gold-400"}`}>{when}</p>
             )}
             <p className="font-semibold">{k.title}</p>
             <p className="text-sm text-white/60">{speakerName(lookups, k.speakerId, k.speaker)}</p>

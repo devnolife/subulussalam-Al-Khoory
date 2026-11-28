@@ -15,9 +15,15 @@ export function ramadhanFor(state: DisplayState, now: number) {
   return ramadhanView(seasonTime(state, now), hijriCalendar(state.settings), state.prayer, state.tarawih, state.ied);
 }
 
+/** Siaran kamera masjid tampil di layar ini (ada siaran, kunci layar benar, dan mode kamera tidak dimatikan). */
+export function cameraActive(state: DisplayState): boolean {
+  return !!state.camera && state.display.cameraMode !== "off";
+}
+
 /**
  * Item yang boleh tampil di panel utama, terurut.
  * - Override dari admin ("tampilkan sekarang") menang selama belum kedaluwarsa.
+ * - `cameraFocus`: selama siaran kamera, layar bermode "tampilkan terus" hanya menampilkan slot Live Ka'bah (berisi kamera).
  * - Jika ada item yang di-pin, hanya item pin yang berputar (tampil terus-menerus).
  * - Modul tanpa konten dilewati.
  */
@@ -26,9 +32,14 @@ export function activeItems(
   hasContent: Record<ModuleType, boolean>,
   override: { type: ModuleType | null; until: number | null },
   now: number,
+  cameraFocus = false,
 ): PlaylistItem[] {
   if (override.type && (!override.until || override.until > now)) {
     const item = items.find((i) => i.type === override.type);
+    if (item) return [{ ...item, enabled: true }];
+  }
+  if (cameraFocus) {
+    const item = items.find((i) => i.type === "kabah");
     if (item) return [{ ...item, enabled: true }];
   }
   const usable = items
@@ -42,7 +53,7 @@ export function activeItems(
 export function contentAvailability(state: DisplayState, now: number = state.serverTime): Record<ModuleType, boolean> {
   const q = state.settings.qris;
   return {
-    kabah: youtubeSources([state.settings.kabah.youtubeUrl, state.settings.kabah.backupUrl]).length > 0,
+    kabah: youtubeSources([state.settings.kabah.youtubeUrl, state.settings.kabah.backupUrl]).length > 0 || cameraActive(state),
     slides: state.slides.length > 0,
     kajian: arrangeKajian(state.kajian, now).length > 0,
     jumat: state.jumat.length > 0,

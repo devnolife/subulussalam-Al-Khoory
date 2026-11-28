@@ -51,7 +51,7 @@ export function AccountSection() {
           <p className="text-sm text-sky-200/70">
             @{user.username} · <span className="font-semibold text-gold-300">{ROLE_LABELS[user.role]}</span>
           </p>
-          <p className="mt-0.5 text-xs text-white/45">{ROLE_DESCRIPTIONS[user.role]}</p>
+          <p className="mt-0.5 text-xs text-muted">{ROLE_DESCRIPTIONS[user.role]}</p>
         </div>
         <Button variant="ghost" onClick={logout} className="shrink-0">
           <LogOut className="size-4" aria-hidden="true" /> Keluar

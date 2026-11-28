@@ -6,6 +6,11 @@ services:
       DATABASE_URL: postgres://masjid:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/masjid
       ADMIN_INITIAL_PIN: ${ADMIN_INITIAL_PIN:?Set ADMIN_INITIAL_PIN}
       UPLOAD_DIR: /app/data/uploads
+      STUN_URLS: ${STUN_URLS-stun:stun.l.google.com:19302}
+      TURN_URLS: ${TURN_URLS:-}
+      TURN_SECRET: ${TURN_SECRET:-}
+      TURN_USERNAME: ${TURN_USERNAME:-}
+      TURN_CREDENTIAL: ${TURN_CREDENTIAL:-}
     ports:
       - "127.0.0.1:3000:3000"
     volumes:

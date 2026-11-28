@@ -47,7 +47,7 @@ export const RESOURCE_PERMISSION: Record<string, Permission> = {
 };
 
 const ROUTE_PERMISSION: [RegExp, Permission][] = [
-  [/^\/admin$/, "remote"],
+  [/^\/admin\/(remote|kamera)/, "remote"],
   [/^\/admin\/playlist/, "playlist"],
   [/^\/admin\/kas/, "finance"],
   [/^\/admin\/(pengumuman|kajian|jumat|ayat|slide|pembicara|pengurus|tarawih|ied)/, "content"],
@@ -55,14 +55,9 @@ const ROUTE_PERMISSION: [RegExp, Permission][] = [
   [/^\/admin\/riwayat/, "audit"],
 ];
 
-/** Izin halaman panel; null berarti semua pengguna yang login boleh membuka. */
+/** Izin halaman panel; null berarti semua pengguna yang login boleh membuka (mis. beranda dashboard). */
 export function routePermission(pathname: string): Permission | null {
   return ROUTE_PERMISSION.find(([re]) => re.test(pathname))?.[1] ?? null;
-}
-
-/** Halaman awal setelah login sesuai peran. */
-export function homeFor(role: Role): string {
-  return can(role, "remote") ? "/admin" : can(role, "finance") ? "/admin/kas" : "/admin/pengaturan";
 }
 
 export type UserSummary = { id: number; role: Role; active: boolean };

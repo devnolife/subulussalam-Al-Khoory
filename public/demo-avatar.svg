@@ -1,11 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Foto contoh">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1d4f91"/>
-      <stop offset="1" stop-color="#0b1f3f"/>
-    </linearGradient>
-  </defs>
-  <rect width="240" height="240" fill="url(#bg)"/>
+  <rect width="240" height="240" fill="#1e3047"/>
   <circle cx="120" cy="96" r="44" fill="#cfe3ff" opacity="0.9"/>
   <path d="M40 240c4-52 38-82 80-82s76 30 80 82z" fill="#cfe3ff" opacity="0.9"/>
   <path d="M74 84c4-30 24-46 46-46s42 16 46 46c-14-10-30-14-46-14s-32 4-46 14z" fill="#f2c14e"/>

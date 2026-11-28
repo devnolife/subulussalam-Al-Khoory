@@ -11,7 +11,7 @@ export function PrayerStrip({ state, now }: { state: DisplayState; now: number }
 
   return (
     <section aria-label="Jadwal sholat hari ini" className="shrink-0 px-14">
-      <ol className="grid h-[148px] grid-cols-7 gap-4">
+      <ol className="card grid h-[148px] grid-cols-7 divide-x divide-line overflow-hidden rounded-2xl">
         {PRAYER_KEYS.map((key) => {
           const Icon = PRAYER_ICONS[key];
           const isCurrent = key === current;
@@ -21,32 +21,20 @@ export function PrayerStrip({ state, now }: { state: DisplayState; now: number }
           return (
             <li
               key={key}
-              className={`relative flex flex-col justify-between rounded-[28px] px-6 pt-5 pb-4.5 ${
-                isCurrent ? "card-brand" : "card"
-              } ${isNext ? "outline-gold" : ""} ${passed ? "opacity-50" : ""}`}
+              aria-current={isCurrent ? "time" : undefined}
+              className={`flex min-w-0 flex-col justify-between px-5 py-5 ${
+                isCurrent ? "card-brand text-white" : isNext ? "outline-gold bg-navy-800 text-gold-300" : passed ? "text-muted" : ""
+              }`}
             >
-              {badge && (
-                <span
-                  className={`absolute -top-3.5 right-5 rounded-full px-3.5 py-1.5 text-[14px] leading-none font-extrabold tracking-[0.08em] uppercase ${
-                    isCurrent ? "bg-white text-royal-600" : "bg-gold-400 text-navy-950"
-                  }`}
-                >
-                  {badge}
-                </span>
-              )}
-              <span className="flex items-center gap-3 text-[24px] font-bold">
-                <span
-                  className={`grid size-11 shrink-0 place-items-center rounded-[14px] ${
-                    isCurrent ? "bg-white/18 text-gold-400" : isNext ? "bg-gold-400 text-navy-950" : "bg-white/10 text-sky-200"
-                  }`}
-                >
-                  <Icon className="size-6" strokeWidth={2} aria-hidden="true" />
-                </span>
+              <span className="flex items-center justify-between gap-2 text-[25px] font-semibold">
                 {PRAYER_LABELS[key]}
+                {badge ? (
+                  <span className={`rounded-md px-2 py-1.5 text-[17px] leading-none font-bold ${isCurrent ? "bg-white text-royal-700" : "bg-gold-400 text-navy-950"}`}>
+                    {badge}
+                  </span>
+                ) : <Icon className="size-6" strokeWidth={1.8} aria-hidden="true" />}
               </span>
-              <span
-                className={`text-[56px] leading-none font-extrabold tracking-[-0.035em] tabular-nums ${isNext ? "text-gold-400" : ""}`}
-              >
+              <span className="text-[58px] leading-none font-bold tracking-[-0.045em] tabular-nums">
                 {today.times[key]}
               </span>
             </li>

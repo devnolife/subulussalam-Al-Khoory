@@ -72,4 +72,20 @@ export function monthLabel(dateStr: string): string {
   return `${MONTHS[m - 1]} ${y}`;
 }
 
+/** Singkatan bulan Indonesia ("Jan", "Agu", "Des") dari "YYYY-MM" atau "YYYY-MM-DD". */
+export function shortMonthLabel(dateStr: string): string {
+  return MONTHS[Number(dateStr.slice(5, 7)) - 1].slice(0, 3);
+}
+
 export const rupiah = (n: number) => "Rp " + Math.round(n).toLocaleString("id-ID");
+
+/** Rupiah ringkas untuk label grafik: "Rp 850 rb", "Rp 1,3 jt", "Rp 2 M". */
+export function rupiahShort(n: number): string {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  const fmt = (v: number) => v.toLocaleString("id-ID", { maximumFractionDigits: 1 });
+  if (abs >= 1e9) return `${sign}Rp ${fmt(abs / 1e9)} M`;
+  if (abs >= 1e6) return `${sign}Rp ${fmt(abs / 1e6)} jt`;
+  if (abs >= 1e3) return `${sign}Rp ${fmt(abs / 1e3)} rb`;
+  return `${sign}Rp ${Math.round(abs)}`;
+}

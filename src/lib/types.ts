@@ -49,12 +49,65 @@ export const MODULE_LABELS: Record<ModuleType, string> = {
 
 export type PlaylistItem = {
   id: number;
+  /** Layar TV pemilik urutan ini (1–3). */
+  displayId?: number;
   type: ModuleType;
   durationSec: number;
   sort: number;
   enabled: boolean;
   pinned: boolean;
 };
+
+/** Layar TV yang bisa diatur terpisah: /display/1, /display/2, /display/3. */
+export const DISPLAY_IDS = [1, 2, 3] as const;
+export type DisplayId = (typeof DISPLAY_IDS)[number];
+
+export function parseDisplayId(value: unknown): DisplayId | null {
+  const n = typeof value === "number" ? value : typeof value === "string" && /^\d+$/.test(value) ? Number(value) : NaN;
+  return (DISPLAY_IDS as readonly number[]).includes(n) ? (n as DisplayId) : null;
+}
+
+/** Sikap layar terhadap siaran kamera masjid. */
+export const CAMERA_MODES = ["replace", "focus", "off"] as const;
+export type CameraMode = (typeof CAMERA_MODES)[number];
+export const CAMERA_MODE_LABELS: Record<CameraMode, string> = {
+  replace: "Gantikan Live Ka'bah",
+  focus: "Tampilkan terus selama siaran",
+  off: "Jangan tampilkan kamera",
+};
+
+/** "Tampilkan sekarang" dari remote; `until` null = sampai dilepas. */
+export type DisplayOverride = { type: ModuleType | null; until: number | null };
+
+export type DisplayConfig = {
+  id: DisplayId;
+  name: string;
+  cameraMode: CameraMode;
+  /** false = layar ini selalu senyap, mis. bila beberapa TV berada di ruangan yang sama. */
+  sound: boolean;
+  override: DisplayOverride;
+};
+
+/** "TV 2", atau "TV 2 · Serambi" bila layar diberi nama. */
+export function displayLabel(d: { id: number; name: string }): string {
+  const base = `TV ${d.id}`;
+  const name = d.name.trim();
+  return name && name !== base ? `${base} · ${name}` : base;
+}
+
+/** Status satu layar untuk panel Remote. */
+export type ScreenStatus = DisplayConfig & {
+  /** Jumlah perangkat yang sedang membuka halaman layar ini. */
+  connected: number;
+  /** Dari perangkat tersebut, yang memakai kunci benar sehingga bisa menerima siaran kamera. */
+  keyed: number;
+  lastSeen: number | null;
+};
+
+export type IceServer = { urls: string | string[]; username?: string; credential?: string };
+
+/** Siaran kamera yang sedang berjalan; hanya dikirim ke layar yang memakai kunci yang benar. */
+export type CameraInfo = { session: string; audio: boolean; iceServers: IceServer[] };
 
 export type Announcement = {
   id: number;
@@ -224,7 +277,6 @@ export type Settings = {
   kabah: { youtubeUrl: string; backupUrl: string; sound: boolean };
   qris: { image: string | null; bankName: string; accountNo: string; accountName: string; note: string };
   emergency: { active: boolean; text: string };
-  override: { type: ModuleType | null; until: number | null };
   manualPrayer: { prayer: FardhKey | null; startedAt: number | null };
 };
 
@@ -257,17 +309,6 @@ export type FinanceSummary = {
 
 export type Weather = { temperature: number; code: number; label: string; updatedAt: number } | null;
 
-/** Kartu ringkasan di beranda panel; bagian tanpa izin tidak dikirim. */
-export type AdminSummary = {
-  finance?: Pick<FinanceSummary, "balance" | "monthIn" | "monthOut" | "monthLabel" | "monthDonors">;
-  content?: {
-    announcements: number;
-    kajian: number;
-    slides: number;
-    nextJumat: { date: string; khatib: string } | null;
-  };
-};
-
 export type DisplayKajian = Kajian & { presenter: SpeakerCard | null };
 export type DisplayJumat = Jumat & { khatibCard: SpeakerCard | null };
 export type DisplayTarawih = Tarawih & { presenter: SpeakerCard | null };
@@ -279,6 +320,9 @@ export type DisplayState = {
     seasonNow?: number;
   };
   settings: Omit<Settings, never>;
+  /** Pengaturan layar TV yang meminta data ini. */
+  display: DisplayConfig;
+  camera: CameraInfo | null;
   playlist: PlaylistItem[];
   announcements: Announcement[];
   /** Kajian aktif; kajian sekali yang tanggalnya sudah lewat tidak dikirim. */

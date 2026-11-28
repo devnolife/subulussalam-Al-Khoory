@@ -1,11 +1,13 @@
 import { Pool, type QueryResultRow } from "pg";
 import bcrypt from "bcryptjs";
+import { newAccessKey } from "./access-key";
+import { DISPLAY_IDS, MODULE_TYPES } from "./types";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value JSONB NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, expires_at TIMESTAMPTZ NOT NULL);
 CREATE TABLE IF NOT EXISTS playlist_items (
-  id SERIAL PRIMARY KEY, type TEXT UNIQUE NOT NULL, duration_sec INT NOT NULL DEFAULT 20,
+  id SERIAL PRIMARY KEY, type TEXT NOT NULL, duration_sec INT NOT NULL DEFAULT 20,
   sort INT NOT NULL DEFAULT 0, enabled BOOLEAN NOT NULL DEFAULT TRUE, pinned BOOLEAN NOT NULL DEFAULT FALSE);
 CREATE TABLE IF NOT EXISTS announcements (
   id SERIAL PRIMARY KEY, title TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
@@ -67,6 +69,13 @@ CREATE TABLE IF NOT EXISTS ied (
   id SERIAL PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('fitri','adha')), date DATE NOT NULL,
   time TEXT NOT NULL DEFAULT '', location TEXT NOT NULL DEFAULT '', khatib TEXT NOT NULL DEFAULT '',
   imam TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '');
+CREATE TABLE IF NOT EXISTS displays (
+  id INT PRIMARY KEY, name TEXT NOT NULL DEFAULT '',
+  camera_mode TEXT NOT NULL DEFAULT 'replace' CHECK (camera_mode IN ('replace','focus','off')),
+  sound BOOLEAN NOT NULL DEFAULT TRUE, access_key TEXT NOT NULL, override_type TEXT, override_until BIGINT);
+ALTER TABLE playlist_items ADD COLUMN IF NOT EXISTS display_id INT NOT NULL DEFAULT 1;
+ALTER TABLE playlist_items DROP CONSTRAINT IF EXISTS playlist_items_type_key;
+CREATE UNIQUE INDEX IF NOT EXISTS playlist_items_display_type_key ON playlist_items (display_id, type);
 `;
 
 const SEED_PLAYLIST: [string, number][] = [
@@ -132,6 +141,27 @@ const SEED_VERSES: [string, string, string][] = [
   ],
 ];
 
+/**
+ * Konten awal dari data masjid di portal maslam.id (diambil 28 November 2026); gambarnya ada di public/masjid.
+ * Poster petugas Jum'at 24 Juli 2026 disimpan nonaktif karena tanggalnya sudah lewat.
+ */
+const SEED_SLIDES: [image: string, caption: string, active: boolean][] = [
+  ["/masjid/slide/masjid-subulussalam-al-khoory.jpg", "Masjid Subulussalam Al-Khoory", true],
+  ["/masjid/slide/kultum-rutin.jpg", "Kultum Rutin", true],
+  ["/masjid/slide/khatib-jumat-2026-07-24.jpg", "Khatib Jum'at", false],
+  ["/masjid/slide/gambar-masjid.jpg", "Gambar Masjid", true],
+];
+
+const SEED_BOARD: [name: string, position: string][] = [
+  ["Dr. Muktashim Billah, Lc., M.H.", "Ketua"],
+  ["Mursalim, S.Pd.", ""],
+];
+
+const SEED_ANNOUNCEMENTS: [title: string, body: string, showPanel: boolean][] = [
+  ["Kegiatan Rutin", "Hadirilah Kultum Setiap Shalat Duhur", true],
+  ["Media Sosial", "Instagram @masjid_subulussalam_alkhoory · TikTok @mesjid.subulussalam", false],
+];
+
 type G = typeof globalThis & { __pgPool?: Pool; __schemaReady?: Promise<void> };
 const g = globalThis as G;
 
@@ -144,32 +174,74 @@ function pool(): Pool {
   return g.__pgPool;
 }
 
+/**
+ * Tiga layar TV, masing-masing dengan urutan tampilan sendiri. Layar baru menyalin urutan TV 1,
+ * dan "tampilkan sekarang" versi lama (satu untuk semua layar) dipindah ke TV 1.
+ */
+async function initDisplays(p: Pool): Promise<void> {
+  for (const id of DISPLAY_IDS) {
+    // Satu pernyataan agar layar baru dan salinan urutannya tersimpan bersamaan.
+    await p.query(
+      `WITH created AS (
+         INSERT INTO displays (id, name, access_key) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING RETURNING id)
+       INSERT INTO playlist_items (display_id, type, duration_sec, sort, enabled, pinned)
+       SELECT c.id, pi.type, pi.duration_sec, pi.sort, pi.enabled, pi.pinned
+       FROM created c JOIN playlist_items pi ON pi.display_id = 1 WHERE c.id <> 1
+       ON CONFLICT (display_id, type) DO NOTHING`,
+      [id, `TV ${id}`, newAccessKey()],
+    );
+  }
+  await p.query(
+    `INSERT INTO playlist_items (display_id, type, duration_sec, sort)
+     SELECT d.id, s.type, s.dur, s.ord - 1
+     FROM displays d CROSS JOIN unnest($1::text[], $2::int[]) WITH ORDINALITY AS s(type, dur, ord)
+     ON CONFLICT (display_id, type) DO NOTHING`,
+    [SEED_PLAYLIST.map(([type]) => type), SEED_PLAYLIST.map(([, dur]) => dur)],
+  );
+  const legacy = await p.query<{ value: { type?: unknown; until?: unknown } | null }>(
+    "SELECT value FROM settings WHERE key = 'override'",
+  );
+  if (legacy.rowCount) {
+    const { type, until } = legacy.rows[0].value ?? {};
+    const untilMs = typeof until === "number" ? until : null;
+    if (typeof type === "string" && (MODULE_TYPES as readonly string[]).includes(type) && (!untilMs || untilMs > Date.now())) {
+      await p.query("UPDATE displays SET override_type = $1, override_until = $2 WHERE id = 1", [type, untilMs]);
+    }
+    await p.query("DELETE FROM settings WHERE key = 'override'");
+  }
+}
+
+/**
+ * Isi tabel sekali saja per database dan hanya bila tabelnya masih kosong; kolom `sort` mengikuti urutan baris.
+ * Penanda `seed:<nama>` mencegah data dibuat ulang setelah pengurus menghapus semuanya.
+ */
+async function seedOnce(p: Pool, name: string, table: string, columns: string[], rows: unknown[][]): Promise<void> {
+  const flag = `seed:${name}`;
+  const done = await p.query("SELECT 1 FROM settings WHERE key = $1", [flag]);
+  if (done.rowCount) return;
+  const existing = await p.query(`SELECT 1 FROM ${table} LIMIT 1`);
+  if (!existing.rowCount && rows.length) {
+    const cols = [...columns, "sort"];
+    const values = rows.map((_, r) => `(${cols.map((_, c) => `$${r * cols.length + c + 1}`).join(", ")})`);
+    await p.query(`INSERT INTO ${table} (${cols.join(", ")}) VALUES ${values.join(", ")}`, rows.flatMap((row, i) => [...row, i]));
+  }
+  await p.query("INSERT INTO settings (key, value) VALUES ($1, 'true') ON CONFLICT (key) DO NOTHING", [flag]);
+}
+
 async function init(): Promise<void> {
   const p = pool();
   await p.query(SCHEMA);
-  for (const [i, [type, dur]] of SEED_PLAYLIST.entries()) {
-    await p.query(
-      "INSERT INTO playlist_items (type, duration_sec, sort) VALUES ($1,$2,$3) ON CONFLICT (type) DO NOTHING",
-      [type, dur, i],
-    );
-  }
+  await initDisplays(p);
   const { rows } = await p.query("SELECT count(*)::int AS n FROM verses");
   if (rows[0].n === 0) {
     for (const [arabic, translation, source] of SEED_VERSES) {
       await p.query("INSERT INTO verses (arabic, translation, source) VALUES ($1,$2,$3)", [arabic, translation, source]);
     }
   }
-  // Kategori awal dibuat sekali saja; bila pengurus menghapus semuanya, tidak dibuat ulang.
-  const seeded = await p.query("SELECT 1 FROM settings WHERE key = 'seed:financeCategories'");
-  if (!seeded.rowCount) {
-    const categories = await p.query("SELECT 1 FROM finance_categories LIMIT 1");
-    if (!categories.rowCount) {
-      for (const [i, [name, kind, ziswaf]] of SEED_CATEGORIES.entries()) {
-        await p.query("INSERT INTO finance_categories (name, kind, ziswaf, sort) VALUES ($1,$2,$3,$4)", [name, kind, ziswaf, i]);
-      }
-    }
-    await p.query("INSERT INTO settings (key, value) VALUES ('seed:financeCategories', 'true') ON CONFLICT (key) DO NOTHING");
-  }
+  await seedOnce(p, "financeCategories", "finance_categories", ["name", "kind", "ziswaf"], SEED_CATEGORIES);
+  await seedOnce(p, "slides", "slides", ["image", "caption", "active"], SEED_SLIDES);
+  await seedOnce(p, "boardMembers", "board_members", ["name", "position"], SEED_BOARD);
+  await seedOnce(p, "announcements", "announcements", ["title", "body", "show_panel"], SEED_ANNOUNCEMENTS);
   const existingUser = await p.query("SELECT 1 FROM users LIMIT 1");
   if (!existingUser.rowCount) {
     // Instalasi lama memakai satu kode unik: hash-nya dipakai ulang sebagai password akun "admin".

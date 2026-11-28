@@ -1,14 +1,15 @@
 import { query } from "./db";
 import type { Settings } from "./types";
 
+/** Identitas, lokasi, logo, dan QRIS bawaan dari data awal masjid (gambar di public/masjid). */
 export const DEFAULT_SETTINGS: Settings = {
   mosque: {
     name: "Masjid Subulussalam Al-Khoory",
     subtitle: "Universitas Muhammadiyah Makassar",
-    address: "Jl. Sultan Alauddin No. 259, Makassar",
-    logo: null,
+    address: "Jl. Sultan Alauddin No. 259, Gunung Sari, Rappocini, Makassar",
+    logo: "/masjid/logo.png",
   },
-  location: { lat: -5.1834, lng: 119.4445, kemenagCityId: "2622", cityName: "Kota Makassar" },
+  location: { lat: -5.181821, lng: 119.44111, kemenagCityId: "2622", cityName: "Kota Makassar" },
   prayer: {
     corrections: { imsak: 0, subuh: 0, terbit: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0 },
     iqamahMin: { subuh: 10, dzuhur: 10, ashar: 10, maghrib: 7, isya: 10 },
@@ -24,9 +25,8 @@ export const DEFAULT_SETTINGS: Settings = {
     backupUrl: "https://www.youtube.com/watch?v=NGJ2z3cIKHI",
     sound: true,
   },
-  qris: { image: null, bankName: "", accountNo: "", accountName: "", note: "Infaq & sedekah untuk kemakmuran masjid" },
+  qris: { image: "/masjid/qris.jpg", bankName: "", accountNo: "", accountName: "", note: "Infaq & sedekah untuk kemakmuran masjid" },
   emergency: { active: false, text: "" },
-  override: { type: null, until: null },
   manualPrayer: { prayer: null, startedAt: null },
 };
 

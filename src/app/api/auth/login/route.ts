@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { audit, checkRateLimit, createSession, normalizeUsername, verifyLogin } from "@/lib/auth";
 import { clientIp, handleError, jsonError } from "@/lib/api";
-import { homeFor } from "@/lib/permissions";
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +14,8 @@ export async function POST(request: Request) {
     if (!user) return jsonError("Nama pengguna atau password salah", 401);
     await createSession(user.id);
     await audit(user, "login");
-    return NextResponse.json({ ok: true, home: homeFor(user.role) });
+    // Beranda dashboard bisa dibuka semua peran; isinya menyesuaikan izin.
+    return NextResponse.json({ ok: true, home: "/admin" });
   } catch (e) {
     return handleError(e);
   }

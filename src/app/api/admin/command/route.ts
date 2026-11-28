@@ -5,22 +5,37 @@ import { authorize, handleError } from "@/lib/api";
 import { audit } from "@/lib/auth";
 import { publish } from "@/lib/realtime";
 import { clearPrayerCache } from "@/lib/prayer/service";
-import { FARDH_KEYS, MODULE_LABELS, MODULE_TYPES, PRAYER_LABELS } from "@/lib/types";
+import { getDisplay, setDisplayOverride } from "@/lib/displays";
+import { DISPLAY_IDS, FARDH_KEYS, MODULE_LABELS, MODULE_TYPES, PRAYER_LABELS, displayLabel, parseDisplayId, type DisplayId } from "@/lib/types";
+
+/** Layar tujuan; kosong = semua layar TV. */
+const tv = z
+  .number()
+  .refine((n) => parseDisplayId(n) !== null, "Layar TV tidak dikenal")
+  .transform((n) => n as DisplayId)
+  .optional();
 
 const schema = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("reload") }),
+  z.object({ action: z.literal("reload"), tv }),
   z.object({
     action: z.literal("show"),
     type: z.enum(MODULE_TYPES),
     minutes: z.coerce.number().int().min(0).max(1440).default(0),
+    tv,
   }),
-  z.object({ action: z.literal("clearShow") }),
+  z.object({ action: z.literal("clearShow"), tv }),
   z.object({ action: z.literal("emergency"), text: z.string().trim().min(1).max(500) }),
   z.object({ action: z.literal("clearEmergency") }),
   z.object({ action: z.literal("prayer"), prayer: z.enum(FARDH_KEYS) }),
   z.object({ action: z.literal("clearPrayer") }),
   z.object({ action: z.literal("refreshPrayer") }),
 ]);
+
+async function targetLabel(id: DisplayId | undefined): Promise<string> {
+  if (!id) return "semua layar TV";
+  const record = await getDisplay(id);
+  return displayLabel(record ?? { id, name: "" });
+}
 
 /** Remote cepat dari HP pengurus. */
 export async function POST(request: Request) {
@@ -29,18 +44,24 @@ export async function POST(request: Request) {
   try {
     const cmd = schema.parse(await request.json());
     const log = (detail: string) => audit(user, "command", cmd.action, detail);
+    let topic = "settings";
     switch (cmd.action) {
       case "reload":
-        publish({ type: "command", command: "reload" });
-        await log("Muat ulang layar TV");
+        publish({ type: "command", command: "reload", tv: cmd.tv });
+        await log(`Muat ulang ${await targetLabel(cmd.tv)}`);
         return NextResponse.json({ ok: true });
       case "show":
-        await setSetting("override", { type: cmd.type, until: cmd.minutes ? Date.now() + cmd.minutes * 60_000 : null });
-        await log(`Tampilkan ${MODULE_LABELS[cmd.type]}${cmd.minutes ? ` selama ${cmd.minutes} menit` : ""}`);
+        await setDisplayOverride(cmd.tv ? [cmd.tv] : DISPLAY_IDS, {
+          type: cmd.type,
+          until: cmd.minutes ? Date.now() + cmd.minutes * 60_000 : null,
+        });
+        await log(`Tampilkan ${MODULE_LABELS[cmd.type]} di ${await targetLabel(cmd.tv)}${cmd.minutes ? ` selama ${cmd.minutes} menit` : ""}`);
+        topic = "displays";
         break;
       case "clearShow":
-        await setSetting("override", { type: null, until: null });
-        await log("Kembali ke urutan tampilan");
+        await setDisplayOverride(cmd.tv ? [cmd.tv] : DISPLAY_IDS, { type: null, until: null });
+        await log(`Kembali ke urutan tampilan di ${await targetLabel(cmd.tv)}`);
+        topic = "displays";
         break;
       case "emergency":
         await setSetting("emergency", { active: true, text: cmd.text });
@@ -63,7 +84,7 @@ export async function POST(request: Request) {
         await log("Muat ulang jadwal sholat");
         break;
     }
-    publish({ type: "update", topics: ["settings"] });
+    publish({ type: "update", topics: [topic] });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return handleError(e);

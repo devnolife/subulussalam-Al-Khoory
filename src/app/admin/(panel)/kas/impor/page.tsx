@@ -189,7 +189,7 @@ export default function ImporKasPage() {
     return (
       <div>
         {back}
-        <Card className="space-y-4 text-center">
+        <Card className="mx-auto max-w-xl space-y-4 text-center">
           <CircleCheck className="mx-auto size-12 text-emerald-300" aria-hidden="true" />
           <div>
             <h1 className="text-xl font-extrabold">Impor selesai</h1>
@@ -241,7 +241,7 @@ export default function ImporKasPage() {
 
       <input ref={fileRef} type="file" accept={ACCEPT} hidden onChange={(e) => pick(e.target.files?.[0])} />
       {!loaded ? (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2 xl:items-start">
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
@@ -250,7 +250,7 @@ export default function ImporKasPage() {
           >
             {busy === "read" ? <Loader2 className="size-7 animate-spin" aria-hidden="true" /> : <Upload className="size-7 text-gold-400" aria-hidden="true" />}
             <span className="font-bold">{busy === "read" ? "Membaca file…" : "Pilih file CSV atau Excel"}</span>
-            <span className="text-xs text-white/45">.csv · .xlsx · maks. 5 MB</span>
+            <span className="text-xs text-muted">.csv · .xlsx · maks. 5 MB</span>
           </button>
           <Card className="space-y-2 text-sm text-white/60">
             <p className="font-bold text-white/80">Yang bisa dibaca</p>
@@ -278,8 +278,8 @@ export default function ImporKasPage() {
       )}
 
       {loaded && config && built && (
-        <div className="mt-4 space-y-4">
-          <Card>
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
+          <Card className="min-w-0">
             <fieldset disabled={!!busy} className="space-y-4">
               <legend className="mb-3 font-bold">Cocokkan kolom</legend>
               {loaded.sheets.length > 1 && (
@@ -344,140 +344,142 @@ export default function ImporKasPage() {
             </fieldset>
           </Card>
 
-          <Card className="space-y-3">
-            <h2 className="font-bold">{statuses ? "Hasil pemeriksaan" : "Hasil pembacaan"}</h2>
-            <dl className="grid grid-cols-2 gap-2 text-center">
-              {(statuses
-                ? [
-                    { label: "Baru", value: counts[0], tone: "text-emerald-300" },
-                    { label: "Sudah pernah diimpor", value: counts[1], tone: "text-white/70" },
-                    { label: "Mirip data yang ada", value: counts[2], tone: "text-amber-200" },
-                    { label: "Tidak terbaca", value: errors.length, tone: errors.length ? "text-rose-300" : "text-white/70" },
-                  ]
-                : [
-                    { label: "Transaksi terbaca", value: built.rows.length, tone: "text-white" },
-                    { label: "Tidak terbaca", value: errors.length, tone: errors.length ? "text-rose-300" : "text-white/70" },
-                  ]
-              ).map((s) => (
-                <div key={s.label} className="rounded-2xl bg-white/5 px-1 py-2">
-                  <dt className="text-[11px] text-white/50">{s.label}</dt>
-                  <dd className={`text-lg font-bold tabular-nums ${s.tone}`}>{s.value}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="text-sm text-white/70 tabular-nums">
-              {statuses ? "Akan diimpor: " : ""}
-              <span className="font-bold text-emerald-300">+{rupiah(sum(importRows, "in"))}</span> ·{" "}
-              <span className="font-bold text-rose-300">−{rupiah(sum(importRows, "out"))}</span>
-            </p>
-            {statuses && counts[2] > 0 && (
-              <div>
-                <Toggle
-                  checked={includeSimilar}
-                  onChange={setIncludeSimilar}
-                  label={`Tetap impor ${counts[2]} transaksi yang mirip`}
-                />
-                <p className="text-xs text-white/45">
-                  Mirip = tanggal, jenis, dan nominalnya sama dengan transaksi yang sudah tercatat (mungkin pernah dicatat manual).
-                </p>
-              </div>
-            )}
-            {tooMany && (
-              <p className="rounded-2xl bg-rose-500/10 p-3 text-sm text-rose-200">
-                Maksimal {MAX_IMPORT_ROWS.toLocaleString("id-ID")} transaksi sekali impor. Pecah file menjadi beberapa bagian.
+          <div className="min-w-0 space-y-4">
+            <Card className="space-y-3">
+              <h2 className="font-bold">{statuses ? "Hasil pemeriksaan" : "Hasil pembacaan"}</h2>
+              <dl className="grid grid-cols-2 gap-2 text-center">
+                {(statuses
+                  ? [
+                      { label: "Baru", value: counts[0], tone: "text-emerald-300" },
+                      { label: "Sudah pernah diimpor", value: counts[1], tone: "text-white/70" },
+                      { label: "Mirip data yang ada", value: counts[2], tone: "text-amber-200" },
+                      { label: "Tidak terbaca", value: errors.length, tone: errors.length ? "text-rose-300" : "text-white/70" },
+                    ]
+                  : [
+                      { label: "Transaksi terbaca", value: built.rows.length, tone: "text-white" },
+                      { label: "Tidak terbaca", value: errors.length, tone: errors.length ? "text-rose-300" : "text-white/70" },
+                    ]
+                ).map((s) => (
+                  <div key={s.label} className="rounded-2xl bg-white/5 px-1 py-2">
+                    <dt className="text-[11px] text-white/50">{s.label}</dt>
+                    <dd className={`text-lg font-bold tabular-nums ${s.tone}`}>{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="text-sm text-white/70 tabular-nums">
+                {statuses ? "Akan diimpor: " : ""}
+                <span className="font-bold text-emerald-300">+{rupiah(sum(importRows, "in"))}</span> ·{" "}
+                <span className="font-bold text-rose-300">−{rupiah(sum(importRows, "out"))}</span>
               </p>
-            )}
-            {errors.length > 0 && (
-              <details className="rounded-2xl bg-rose-500/10 p-3 text-sm">
-                <summary className="cursor-pointer font-bold text-rose-200">{errors.length} baris tidak terbaca dan tidak akan diimpor</summary>
-                <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto text-rose-100/80">
-                  {errors.slice(0, 200).map((i) => (
-                    <li key={i.line}>
-                      Baris {i.line}: {i.message}
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            {skipped.length > 0 && (
-              <details className="rounded-2xl bg-white/5 p-3 text-sm">
-                <summary className="cursor-pointer text-white/60">{skipped.length} baris dilewati (saldo, total, atau nominal 0)</summary>
-                <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto text-white/50">
-                  {skipped.slice(0, 200).map((i) => (
-                    <li key={i.line}>
-                      Baris {i.line}: {i.message}
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-          </Card>
-
-          {statuses && shownNeeds.length > 0 && (
-            <Card className="space-y-4">
-              <div>
-                <h2 className="font-bold">Kategori</h2>
-                <p className="text-xs text-white/45">Kategori baru otomatis ditandai ZISWAF bila namanya mengandung zakat, infaq, sedekah, atau wakaf.</p>
-              </div>
-              {shownNeeds.map((need) => (
-                <Field key={need.key} label={`${need.name} · ${kindLabel(need.kind)} · ${need.count} transaksi`}>
-                  <Select
-                    value={targetOf(need)}
-                    disabled={!!busy}
-                    onChange={(e) => setChoices((c) => ({ ...c, [need.key]: e.target.value }))}
-                    options={[
-                      { value: "new", label: "Buat kategori baru" },
-                      { value: "none", label: "Tanpa kategori" },
-                      ...categories
-                        .filter((c) => c.kind === need.kind && (c.active || String(c.id) === targetOf(need)))
-                        .map((c) => ({ value: String(c.id), label: `Masukkan ke: ${c.name}` })),
-                    ]}
+              {statuses && counts[2] > 0 && (
+                <div>
+                  <Toggle
+                    checked={includeSimilar}
+                    onChange={setIncludeSimilar}
+                    label={`Tetap impor ${counts[2]} transaksi yang mirip`}
                   />
-                </Field>
-              ))}
-            </Card>
-          )}
-
-          {built.rows.length > 0 && (
-            <Card className="p-0">
-              <h2 className="px-4 pt-4 font-bold">Contoh transaksi</h2>
-              <ul className="divide-y divide-white/5">
-                {built.rows.slice(0, PREVIEW_ROWS).map((r, i) => {
-                  const status = statuses?.[i];
-                  return (
-                    <li key={r.ref} className={`flex items-start justify-between gap-2 px-4 py-3 ${willImport(status) ? "" : "opacity-50"}`}>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{r.description || r.category || kindLabel(r.kind)}</p>
-                        <p className="truncate text-xs text-white/50">
-                          {[formatDateStr(r.date), r.category, r.donor && `Donatur: ${r.donor}`].filter(Boolean).join(" · ")}
-                        </p>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className={`text-sm font-bold tabular-nums ${r.kind === "in" ? "text-emerald-300" : "text-rose-300"}`}>
-                          {r.kind === "in" ? "+" : "−"}
-                          {rupiah(r.amount)}
-                        </p>
-                        {status && <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] ${STATUS[status].cls}`}>{STATUS[status].label}</span>}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              {built.rows.length > PREVIEW_ROWS && (
-                <p className="px-4 pb-4 text-xs text-white/45">dan {built.rows.length - PREVIEW_ROWS} transaksi lainnya</p>
+                  <p className="text-xs text-muted">
+                    Mirip = tanggal, jenis, dan nominalnya sama dengan transaksi yang sudah tercatat (mungkin pernah dicatat manual).
+                  </p>
+                </div>
+              )}
+              {tooMany && (
+                <p className="rounded-2xl bg-rose-500/10 p-3 text-sm text-rose-200">
+                  Maksimal {MAX_IMPORT_ROWS.toLocaleString("id-ID")} transaksi sekali impor. Pecah file menjadi beberapa bagian.
+                </p>
+              )}
+              {errors.length > 0 && (
+                <details className="rounded-2xl bg-rose-500/10 p-3 text-sm">
+                  <summary className="cursor-pointer font-bold text-rose-200">{errors.length} baris tidak terbaca dan tidak akan diimpor</summary>
+                  <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto text-rose-100/80">
+                    {errors.slice(0, 200).map((i) => (
+                      <li key={i.line}>
+                        Baris {i.line}: {i.message}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+              {skipped.length > 0 && (
+                <details className="rounded-2xl bg-white/5 p-3 text-sm">
+                  <summary className="cursor-pointer text-white/60">{skipped.length} baris dilewati (saldo, total, atau nominal 0)</summary>
+                  <ul className="mt-2 max-h-60 space-y-1 overflow-y-auto text-white/50">
+                    {skipped.slice(0, 200).map((i) => (
+                      <li key={i.line}>
+                        Baris {i.line}: {i.message}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               )}
             </Card>
-          )}
 
-          {statuses ? (
-            <Button variant="gold" className="w-full" loading={busy === "import"} disabled={!importRows.length || tooMany} onClick={commit}>
-              {importRows.length ? `Impor ${importRows.length} transaksi` : "Tidak ada transaksi baru"}
-            </Button>
-          ) : (
-            <Button className="w-full" loading={busy === "check"} disabled={!built.rows.length || tooMany} onClick={check}>
-              Periksa data
-            </Button>
-          )}
+            {statuses && shownNeeds.length > 0 && (
+              <Card className="space-y-4">
+                <div>
+                  <h2 className="font-bold">Kategori</h2>
+                  <p className="text-xs text-muted">Kategori baru otomatis ditandai ZISWAF bila namanya mengandung zakat, infaq, sedekah, atau wakaf.</p>
+                </div>
+                {shownNeeds.map((need) => (
+                  <Field key={need.key} label={`${need.name} · ${kindLabel(need.kind)} · ${need.count} transaksi`}>
+                    <Select
+                      value={targetOf(need)}
+                      disabled={!!busy}
+                      onChange={(e) => setChoices((c) => ({ ...c, [need.key]: e.target.value }))}
+                      options={[
+                        { value: "new", label: "Buat kategori baru" },
+                        { value: "none", label: "Tanpa kategori" },
+                        ...categories
+                          .filter((c) => c.kind === need.kind && (c.active || String(c.id) === targetOf(need)))
+                          .map((c) => ({ value: String(c.id), label: `Masukkan ke: ${c.name}` })),
+                      ]}
+                    />
+                  </Field>
+                ))}
+              </Card>
+            )}
+
+            {built.rows.length > 0 && (
+              <Card className="p-0">
+                <h2 className="px-4 pt-4 font-bold">Contoh transaksi</h2>
+                <ul className="divide-y divide-white/5">
+                  {built.rows.slice(0, PREVIEW_ROWS).map((r, i) => {
+                    const status = statuses?.[i];
+                    return (
+                      <li key={r.ref} className={`flex items-start justify-between gap-2 px-4 py-3 ${willImport(status) ? "" : "opacity-50"}`}>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">{r.description || r.category || kindLabel(r.kind)}</p>
+                          <p className="truncate text-xs text-white/50">
+                            {[formatDateStr(r.date), r.category, r.donor && `Donatur: ${r.donor}`].filter(Boolean).join(" · ")}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className={`text-sm font-bold tabular-nums ${r.kind === "in" ? "text-emerald-300" : "text-rose-300"}`}>
+                            {r.kind === "in" ? "+" : "−"}
+                            {rupiah(r.amount)}
+                          </p>
+                          {status && <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] ${STATUS[status].cls}`}>{STATUS[status].label}</span>}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                {built.rows.length > PREVIEW_ROWS && (
+                  <p className="px-4 pb-4 text-xs text-muted">dan {built.rows.length - PREVIEW_ROWS} transaksi lainnya</p>
+                )}
+              </Card>
+            )}
+
+            {statuses ? (
+              <Button variant="gold" className="w-full" loading={busy === "import"} disabled={!importRows.length || tooMany} onClick={commit}>
+                {importRows.length ? `Impor ${importRows.length} transaksi` : "Tidak ada transaksi baru"}
+              </Button>
+            ) : (
+              <Button className="w-full" loading={busy === "check"} disabled={!built.rows.length || tooMany} onClick={check}>
+                Periksa data
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

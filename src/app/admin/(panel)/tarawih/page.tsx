@@ -34,7 +34,7 @@ export default function TarawihAdmin() {
         const speaker = speakerName(lookups, t.speakerId, t.speaker);
         return (
           <>
-            <p className={`text-sm font-semibold ${t.date < today ? "text-white/40" : "text-gold-400"}`}>
+            <p className={`text-sm font-semibold ${t.date < today ? "text-muted" : "text-gold-400"}`}>
               {WEEKDAYS[weekdayOf(t.date)]}, {formatDateStr(t.date)}
             </p>
             <p className="font-semibold">Imam: {t.imam || "-"}</p>

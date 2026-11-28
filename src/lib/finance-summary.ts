@@ -1,9 +1,42 @@
-import { addDays } from "./time";
+import { addDays, monthLabel, shortMonthLabel } from "./time";
 import { ZISWAF_KINDS, type FinanceSummary, type ZiswafKind } from "./types";
 
 export const DONOR_WINDOW_DAYS = 60;
 export const HIDDEN_DONOR = "Hamba Allah";
 const UNCATEGORIZED = "Tanpa kategori";
+
+export type MonthTotals = { month: string; short: string; label: string; in: number; out: number };
+
+/** "YYYY-MM" sebanyak `count` bulan terakhir, berakhir di bulan `today`, urut dari yang terlama. */
+function lastMonths(today: string, count: number): string[] {
+  const year = Number(today.slice(0, 4));
+  const month = Number(today.slice(5, 7)) - 1;
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(Date.UTC(year, month - (count - 1 - i), 1));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  });
+}
+
+/** Tanggal pertama yang dibutuhkan monthlySeries (awal bulan terlama). */
+export function monthlySeriesStart(today: string, count = 6): string {
+  return `${lastMonths(today, count)[0]}-01`;
+}
+
+/** Pemasukan & pengeluaran per bulan untuk grafik; bulan tanpa transaksi tetap muncul bernilai 0. */
+export function monthlySeries(
+  rows: { month: string; kind: "in" | "out"; total: number }[],
+  today: string,
+  count = 6,
+): MonthTotals[] {
+  const series = new Map(
+    lastMonths(today, count).map((month) => [month, { month, short: shortMonthLabel(month), label: monthLabel(month), in: 0, out: 0 }]),
+  );
+  for (const r of rows) {
+    const entry = series.get(r.month);
+    if (entry) entry[r.kind] += r.total;
+  }
+  return [...series.values()];
+}
 
 export type FinanceRow = {
   id: number;

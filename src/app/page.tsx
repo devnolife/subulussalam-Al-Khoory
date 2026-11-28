@@ -1,64 +1,45 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { ArrowRight, FlaskConical, MonitorPlay, Smartphone, type LucideIcon } from "lucide-react";
-import { SunEmblem } from "@/components/display/SunEmblem";
-import { IconTile } from "@/components/display/ui";
-
-type HomeLink = { href: string; title: string; desc: string; icon: LucideIcon; brand: boolean };
-
-const LINKS: HomeLink[] = [
-  { href: "/display", title: "Layar TV", desc: "Tampilan informasi untuk layar di masjid", icon: MonitorPlay, brand: true },
-  { href: "/admin", title: "Panel pengurus", desc: "Kelola jadwal, kajian, dan pengumuman dari HP", icon: Smartphone, brand: false },
-];
-
-// Deployment demo tidak punya database, jadi hanya mengarah ke halaman berdata contoh.
-const DEMO_LINKS: HomeLink[] = [
-  { href: "/demo", title: "Simulasi layar", desc: "Coba semua panel dan kondisi layar dengan data contoh", icon: FlaskConical, brand: true },
-  { href: "/display?demo=1&module=kabah", title: "Layar TV penuh", desc: "Tampilan 1920×1080 seperti di TV masjid", icon: MonitorPlay, brand: false },
-];
+import { ArrowRight, MapPin } from "lucide-react";
+import { MosqueCover } from "@/components/MosqueCover";
+import { PortalHeader } from "@/components/PortalHeader";
+import { DISPLAY_IDS } from "@/lib/types";
 
 export default async function Home() {
   await connection();
   const demo = process.env.DEMO_MODE === "1";
-  const links = demo ? DEMO_LINKS : LINKS;
   return (
-    <main className="scene flex min-h-dvh items-center justify-center px-6 py-16">
-      <div className="w-full max-w-2xl">
-        <span className="grid size-20 place-items-center rounded-[26px] bg-royal-600 text-white">
-          <SunEmblem className="size-12" />
-        </span>
-        <h1 className="mt-9 text-4xl leading-[1.05] font-extrabold tracking-[-0.03em] text-balance sm:text-6xl">
-          Masjid Subulussalam Al-Khoory
-        </h1>
-        <p className="mt-3 text-base font-bold text-gold-400">Universitas Muhammadiyah Makassar</p>
-        <p className="mt-4 max-w-xl text-lg text-sky-200/75">Layar informasi masjid yang dapat dikelola langsung dari HP pengurus.</p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {links.map(({ href, title, desc, icon, brand }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`group flex flex-col gap-6 rounded-[28px] p-6 transition-[scale] duration-150 active:scale-[0.96] ${brand ? "card-brand" : "card"}`}
-            >
-              <span className="flex items-center justify-between">
-                <IconTile icon={icon} tone={brand ? "gold" : "brand"} />
-                <ArrowRight
-                  className="size-6 text-white/50 transition-transform duration-150 group-hover:translate-x-1"
-                  aria-hidden="true"
-                />
-              </span>
-              <span>
-                <span className="block text-xl font-extrabold">{title}</span>
-                <span className="mt-1 block text-sm text-sky-100/75">{desc}</span>
-              </span>
-            </Link>
-          ))}
+    <div className="scene mx-auto min-h-dvh max-w-7xl px-5 sm:px-8 lg:px-12">
+      <PortalHeader link={demo ? null : { href: "/admin", label: "Panel pengurus" }} />
+      <main className="py-5 sm:py-8 lg:py-10">
+        <div className="overflow-hidden rounded-2xl rounded-tr-[3.5rem] sm:rounded-tr-[6rem]">
+          <MosqueCover variant="portal">
+            <h1 className="max-w-[18ch] font-display text-[clamp(2.75rem,5.8vw,5rem)] leading-[1.05] font-bold tracking-tight text-balance">
+              Masjid Subulussalam <span className="whitespace-nowrap">Al-Khoory</span>
+            </h1>
+            <p className="mt-4 flex items-center gap-2 text-sm leading-snug text-sky-200 sm:text-base">
+              <MapPin className="size-4 shrink-0" aria-hidden="true" />
+              Jl. Sultan Alauddin No. 259, Makassar
+            </p>
+          </MosqueCover>
+          {demo ? (
+            <nav aria-label="Simulasi" className="channel-strip grid-cols-2">
+              <Link href="/demo" className="channel-link">Simulasi layar <ArrowRight aria-hidden="true" /></Link>
+              <Link href="/display?demo=1&module=kabah" className="channel-link">Layar TV penuh <ArrowRight aria-hidden="true" /></Link>
+            </nav>
+          ) : (
+            <nav aria-label="Pilih layar TV" className="channel-strip grid-cols-3">
+              {DISPLAY_IDS.map((id) => (
+                <Link key={id} href={`/display/${id}`} className="channel-link">
+                  <span className="tabular-nums">TV {id}</span>
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              ))}
+            </nav>
+          )}
         </div>
-        {demo && (
-          <p className="mt-6 text-sm text-sky-200/60">
-            Versi demo ini memakai data contoh. Panel pengurus memerlukan database sehingga tidak tersedia di sini.
-          </p>
-        )}
-      </div>
-    </main>
+        {demo && <p className="mt-4 text-sm text-muted">Simulasi memakai data contoh. Panel pengurus tidak tersedia.</p>}
+      </main>
+    </div>
   );
 }

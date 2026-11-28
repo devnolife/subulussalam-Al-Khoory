@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState } from "react";
 import { UsersRound } from "lucide-react";
 import type { DisplayState } from "@/lib/types";
 import { Avatar, PanelHeader } from "./ui";
 
-const delay = (step: number): CSSProperties => ({ animationDelay: `${step * 100}ms` });
 
 export const BOARD_PAGE_SIZE = 8;
 
@@ -47,10 +46,9 @@ export function PengurusPanel({ state, perPageSec }: { state: DisplayState; perP
         {shown.map((m, idx) => (
           <li
             key={m.id}
-            className={`rise flex min-h-0 flex-col items-center justify-center rounded-[28px] px-5 text-center ${
+            className={`flex min-h-0 flex-col items-center justify-center rounded-[28px] px-5 text-center ${
               idx === 0 && current === 0 ? "card-brand" : "tile"
             }`}
-            style={delay(idx + 1)}
           >
             <Avatar
               name={m.name}

@@ -1,21 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { DisplayState } from "@/lib/types";
+import type { DisplayId, DisplayState } from "@/lib/types";
 import { addDays, witaDateStr, witaParts } from "@/lib/time";
 import { computeOfflineTimes } from "@/lib/prayer/offline";
 import { applyCorrections } from "@/lib/prayer/schedule";
+import { isPreview, screenClientId, screenKey } from "./screen";
 
-const SNAPSHOT_KEY = "masjid-display-snapshot";
-const ID_KEY = "masjid-display-id";
+/** Salinan data terakhir per layar, dipakai bila server tidak terjangkau. */
+const snapshotKey = (tv: DisplayId) => `masjid-display-snapshot:${tv}`;
+const LEGACY_SNAPSHOT_KEY = "masjid-display-snapshot";
 
-function displayId(): string {
-  let id = localStorage.getItem(ID_KEY);
-  if (!id) {
-    id = Math.random().toString(36).slice(2, 10);
-    localStorage.setItem(ID_KEY, id);
+function readSnapshot(tv: DisplayId): DisplayState | null {
+  try {
+    const data = JSON.parse(localStorage.getItem(snapshotKey(tv)) ?? "null") as DisplayState | null;
+    // Salinan dari versi sebelum ada TV 1–3 tidak punya `display`.
+    return data?.display ? data : null;
+  } catch {
+    return null;
   }
-  return id;
 }
 
 /** Jika data tersimpan sudah basi (TV offline lewat tengah malam), hitung jadwal secara lokal. */
@@ -32,7 +35,7 @@ function freshenPrayer(state: DisplayState, now: number): DisplayState {
 
 export type ConnectionStatus = "connecting" | "online" | "offline";
 
-export function useDisplayData() {
+export function useDisplayData(tv: DisplayId) {
   const [state, setState] = useState<DisplayState | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const offsetRef = useRef(0);
@@ -43,8 +46,15 @@ export function useDisplayData() {
       const t0 = Date.now();
       const search = new URLSearchParams(location.search);
       const demo = search.get("demo") === "1";
-      const query = demo ? `?${new URLSearchParams({ demo: "1", module: search.get("module") ?? "", phase: search.get("phase") ?? "" })}` : "";
-      const res = await fetch(`/api/display/state${query}`, { cache: "no-store" });
+      const params = demo
+        ? new URLSearchParams({ demo: "1", module: search.get("module") ?? "", phase: search.get("phase") ?? "" })
+        : new URLSearchParams({ tv: String(tv) });
+      if (!demo && isPreview()) params.set("preview", "1");
+      else if (!demo) {
+        const key = screenKey(tv);
+        if (key) params.set("key", key);
+      }
+      const res = await fetch(`/api/display/state?${params}`, { cache: "no-store" });
       if (!res.ok) throw new Error(String(res.status));
       const data: DisplayState = await res.json();
       const t1 = Date.now();
@@ -52,26 +62,35 @@ export function useDisplayData() {
       setOffset(offsetRef.current);
       setState(data);
       if (data.demo) setStatus("online");
-      else localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(data));
+      else if (!isPreview()) {
+        // Siaran kamera tidak ikut disimpan: sesi lama tidak berguna saat server tidak terjangkau.
+        localStorage.setItem(snapshotKey(tv), JSON.stringify({ ...data, camera: null }));
+        localStorage.removeItem(LEGACY_SNAPSHOT_KEY);
+      }
     } catch {
       setStatus("offline");
       if (new URLSearchParams(location.search).get("demo") === "1") return;
       setState((prev) => {
         if (prev) return freshenPrayer(prev, Date.now() + offsetRef.current);
-        const raw = localStorage.getItem(SNAPSHOT_KEY);
-        return raw ? freshenPrayer(JSON.parse(raw), Date.now()) : prev;
+        const saved = readSnapshot(tv);
+        return saved ? freshenPrayer(saved, Date.now()) : prev;
       });
     }
-  }, []);
+  }, [tv]);
 
   // Data awal + realtime SSE
   useEffect(() => {
     load();
     if (new URLSearchParams(location.search).get("demo") === "1") return;
     let debounce: ReturnType<typeof setTimeout> | undefined;
+    const params = new URLSearchParams({ tv: String(tv) });
     // Pratinjau di panel admin tidak dihitung sebagai layar TV terhubung.
-    const preview = new URLSearchParams(location.search).has("preview");
-    const es = new EventSource(preview ? "/api/stream" : `/api/stream?display=${displayId()}`);
+    if (!isPreview()) {
+      params.set("client", screenClientId());
+      const key = screenKey(tv);
+      if (key) params.set("key", key);
+    }
+    const es = new EventSource(`/api/stream?${params}`);
     es.addEventListener("hello", () => {
       setStatus("online");
       load();
@@ -89,7 +108,7 @@ export function useDisplayData() {
       clearTimeout(debounce);
       es.close();
     };
-  }, [load]);
+  }, [load, tv]);
 
   // Refresh berkala (cuaca, pergantian hari) + reload harian dini hari untuk mencegah memory leak.
   useEffect(() => {

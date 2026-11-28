@@ -5,6 +5,7 @@ import { formatHijri, hijriStartShift } from "../src/lib/hijri";
 import { upcomingIslamicDays } from "../src/lib/islamic-days";
 import { witaToMs } from "../src/lib/time";
 import { MODULE_TYPES, type ModuleType, type PlaylistItem } from "../src/lib/types";
+import { initials } from "../src/components/display/ui";
 
 const items: PlaylistItem[] = MODULE_TYPES.map((type, i) => ({
   id: i + 1,
@@ -42,6 +43,12 @@ describe("activeItems", () => {
     const override = { type: "qris" as const, until: 1000 };
     expect(types(activeItems(list, all, override, 999))).toEqual(["qris"]);
     expect(types(activeItems(list, all, override, 1000))).not.toContain("qris");
+  });
+
+  it("mode kamera 'tampilkan terus' hanya memutar slot Ka'bah, tetapi override tetap menang", () => {
+    const list = items.map((i) => (i.type === "kabah" ? { ...i, enabled: false } : i));
+    expect(types(activeItems(list, all, noOverride, 0, true))).toEqual(["kabah"]);
+    expect(types(activeItems(list, all, { type: "kas", until: null }, 0, true))).toEqual(["kas"]);
   });
 });
 
@@ -139,5 +146,12 @@ describe("upcomingIslamicDays", () => {
   it("hari ini dihitung sebagai 0 hari", () => {
     const [first] = upcomingIslamicDays(witaToMs("2026-05-27", "08:00"), 0, 1);
     expect(first).toMatchObject({ key: "idul-adha", daysLeft: 0 });
+  });
+});
+
+describe("initials", () => {
+  it("mengabaikan gelar akademik di belakang koma", () => {
+    expect(initials("Mursalim, S.Pd.")).toBe("M");
+    expect(initials("Ustadz Dr. H. Ibrahim BR, M.Pd")).toBe("IB");
   });
 });

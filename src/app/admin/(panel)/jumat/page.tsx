@@ -55,7 +55,7 @@ export default function JumatAdmin() {
       header={(items, lookups) => <JumatTools items={items} lookups={lookups} today={today} />}
       renderItem={(j, lookups) => (
         <>
-          <p className={`text-sm font-semibold ${j.date < today ? "text-white/40" : "text-gold-400"}`}>
+          <p className={`text-sm font-semibold ${j.date < today ? "text-muted" : "text-gold-400"}`}>
             {formatDateStr(j.date)}
           </p>
           <p className="font-semibold">Khatib: {speakerName(lookups, j.khatibSpeakerId, j.khatib) || "-"}</p>

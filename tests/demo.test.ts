@@ -11,7 +11,8 @@ describe("simulasi data contoh", () => {
   it("membuat kegiatan dan jadwal contoh untuk hari WITA yang diminta", () => {
     const state = createDemoState(now, "kajian", "normal");
     expect(state.demo?.phase).toBe("normal");
-    expect(state.settings.override.type).toBe("kajian");
+    expect(state.display.override.type).toBe("kajian");
+    expect(state.camera).toBeNull();
     expect(arrangeKajian(state.kajian, now)[0].relative).toBe("Hari ini");
     expect(state.kajian[0].presenter?.name).toContain("contoh");
     expect(state.prayer.today.date).toBe(witaDateStr(now));
@@ -27,7 +28,7 @@ describe("simulasi data contoh", () => {
 
   it("membatasi parameter dan menyiapkan pengumuman darurat contoh", () => {
     const state = createDemoState(now, "not-a-module", "emergency");
-    expect(state.settings.override.type).toBe("kajian");
+    expect(state.display.override.type).toBe("kajian");
     expect(state.settings.emergency.active).toBe(true);
     expect(state.settings.emergency.text).toContain("SIMULASI");
     expect(createDemoState(now, null, "invalid").demo?.phase).toBe("normal");

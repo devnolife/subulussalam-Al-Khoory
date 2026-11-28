@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { DisplayId } from "@/lib/types";
 
 /** Pratinjau layar TV (1920×1080) diskalakan ke lebar kontainer. */
-export function DisplayPreview() {
+export function DisplayPreview({ tv = 1 }: { tv?: DisplayId }) {
   const ref = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
   useEffect(() => {
@@ -17,8 +18,9 @@ export function DisplayPreview() {
     <div ref={ref} className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black ring-1 ring-white/10">
       {scale > 0 && (
         <iframe
-          src="/display?preview=1"
-          title="Pratinjau layar"
+          key={tv}
+          src={`/display/${tv}?preview=1`}
+          title={`Pratinjau layar TV ${tv}`}
           className="pointer-events-none absolute top-0 left-0 origin-top-left border-0"
           style={{ width: 1920, height: 1080, transform: `scale(${scale})` }}
         />

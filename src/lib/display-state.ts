@@ -6,9 +6,15 @@ import { getWeather } from "./weather";
 import { contentVersion } from "./realtime";
 import { getFinanceSummary } from "./finance";
 import { witaDateStr } from "./time";
+import { defaultDisplay, getDisplay, publicDisplay } from "./displays";
+import { keyMatches } from "./access-key";
+import { liveCamera } from "./camera";
+import { iceServers } from "./ice";
 import type {
   Announcement,
   BoardMember,
+  CameraInfo,
+  DisplayId,
   DisplayState,
   Ied,
   Jumat,
@@ -35,13 +41,20 @@ function speakerCard(speakers: Map<number, Speaker>, id: number | null, fallback
   return fallback ? { name: fallback, profile: "", photo: null } : null;
 }
 
-export async function getDisplayState(): Promise<DisplayState> {
+/**
+ * Data lengkap untuk satu layar TV. Siaran kamera hanya disertakan bila `key` cocok dengan kunci layar
+ * (atau untuk pratinjau pengurus yang login), agar gambar kamera tidak bisa dibuka siapa saja yang mengetahui alamat layar.
+ */
+export async function getDisplayState(
+  tv: DisplayId = 1,
+  access: { key?: string | null; trusted?: boolean } = {},
+): Promise<DisplayState> {
   const now = Date.now();
   const today = witaDateStr(now);
-  const settings = await getSettings();
+  const [settings, record] = await Promise.all([getSettings(), getDisplay(tv)]);
   const [playlist, announcements, kajian, jumat, verses, slides, finance, prayerRaw, weather, speakerList, board, tarawih, ied] =
     await Promise.all([
-      listResource<PlaylistItem>("playlist"),
+      listResource<PlaylistItem>("playlist", `WHERE display_id = ${tv}`),
       listResource<Announcement>("announcements", `WHERE active AND (ends_at IS NULL OR ends_at >= '${today}'::date)`),
       listResource<Kajian>("kajian", `WHERE active AND (recurrence <> 'once' OR date IS NULL OR date >= '${today}'::date)`),
       listResource<Jumat>("jumat", `WHERE date >= '${today}'::date`),
@@ -57,8 +70,13 @@ export async function getDisplayState(): Promise<DisplayState> {
     ]);
   const speakers = new Map(speakerList.map((s) => [s.id, s]));
   const c = settings.prayer.corrections;
+  const live = liveCamera();
+  const allowed = !!record && (access.trusted || keyMatches(record.accessKey, access.key));
+  const camera: CameraInfo | null = live && allowed ? { session: live.id, audio: live.audio, iceServers: iceServers(now) } : null;
   return {
     settings,
+    display: record ? publicDisplay(record) : defaultDisplay(tv),
+    camera,
     playlist,
     announcements,
     kajian: kajian.map((k) => ({ ...k, presenter: speakerCard(speakers, k.speakerId, k.speaker) })),

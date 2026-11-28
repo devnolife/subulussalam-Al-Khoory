@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { DisplayState, ModuleType, PlaylistItem } from "@/lib/types";
-import { activeItems, contentAvailability, ramadhanFor, seasonTime } from "@/lib/playlist";
+import { activeItems, cameraActive, contentAvailability, ramadhanFor, seasonTime } from "@/lib/playlist";
 import type { RamadhanView } from "@/lib/ramadhan";
 import type { DisplayTarawih } from "@/lib/types";
 import { SunEmblem } from "./SunEmblem";
+import { CameraPanel } from "./CameraPanel";
 import { HariBesarPanel } from "./HariBesarPanel";
 import { DonaturPanel } from "./DonaturPanel";
 import { PengurusPanel, boardPages } from "./PengurusPanel";
@@ -36,7 +37,12 @@ function renderModule(
 ) {
   switch (type) {
     case "kabah":
-      return <KabahPanel state={state} />;
+      // Selama siaran kamera masjid, slot Live Ka'bah menampilkan kamera.
+      return state.camera && cameraActive(state) ? (
+        <CameraPanel key={state.camera.session} state={state} camera={state.camera} />
+      ) : (
+        <KabahPanel state={state} />
+      );
     case "slides":
       return <SlidesPanel state={state} perSlideSec={item.durationSec} />;
     case "kajian":
@@ -68,12 +74,14 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
   const minute = Math.floor(now / 60_000) * 60_000;
   const availability = useMemo(() => contentAvailability(state, minute), [state, minute]);
   const ramadhan = useMemo(() => ramadhanFor(state, minute), [state, minute]);
-  const overrideActive = !!state.settings.override.type && (!state.settings.override.until || state.settings.override.until > now);
+  const override = state.display.override;
+  const overrideActive = !!override.type && (!override.until || override.until > now);
+  const focus = cameraActive(state) && state.display.cameraMode === "focus";
   const items = useMemo(
-    () => activeItems(state.playlist, availability, state.settings.override, now),
+    () => activeItems(state.playlist, availability, override, now, focus),
     // overrideActive memicu hitung ulang saat override kedaluwarsa
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.playlist, availability, state.settings.override, overrideActive],
+    [state.playlist, availability, override, overrideActive, focus],
   );
   const [cursor, setCursor] = useState<{ type: ModuleType | null; startedAt: number }>({ type: null, startedAt: 0 });
   const latest = useRef({ items, state });
@@ -100,7 +108,7 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
 
   if (!current) {
     return (
-      <section className="card relative flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[32px] text-center">
+      <section className="card relative flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl text-center">
         <span className="relative grid size-36 bg-royal-600 place-items-center rounded-[44px] text-white">
           <SunEmblem className="size-24" />
         </span>
@@ -114,7 +122,7 @@ export function MainPanel({ state, now }: { state: DisplayState; now: number }) 
   const fullBleed = current.type === "kabah" || current.type === "slides";
 
   return (
-    <section className={`relative min-w-0 flex-1 overflow-hidden rounded-[32px] ${fullBleed ? "bg-navy-900" : "card"}`}>
+    <section className={`relative min-w-0 flex-1 overflow-hidden rounded-2xl ${fullBleed ? "bg-navy-900" : "card"}`}>
       <div key={`${current.type}-${cursor.startedAt}`} className="animate-panel-in relative size-full">
         {renderModule(current.type, state, current, now, ramadhan)}
       </div>
